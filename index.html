@@ -1,0 +1,212 @@
+<!--
+Dependecies:
+jQuery JavaScript Library v1.4.2
+http://jquery.com/
+Copyright 2010, John Resig
+Dual licensed under the MIT or GPL Version 2 licenses.
+http://jquery.org/license
+-----------------------------------------------------
+Bootstrap
+Copyright (c) 2011-2019 Twitter, Inc.
+Copyright (c) 2011-2019 The Bootstrap Authors
+https://github.com/twbs/bootstrap/blob/v4.3.1/LICENSE
+-----------------------------------------------------
+Vanta
+https://github.com/tengbao/vanta
+-----------------------------------------------------
+Author: Joshua Cao | yuchenca@andrew.cmu.edu
+Webiste: 16726 course website
+-->
+<!doctype html>
+<html>
+
+<head>
+    <!-- icon -->
+    <link rel="icon" href="./media/joshua.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="./media/joshua.ico" type="image/x-icon">
+    <link rel="bookmark" href="./media/joshua.ico" type="image/x-icon">
+    <!-- title -->
+    <title>16726-Yuchenca</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <meta name="description" content="16726-Yuchenca">
+    <meta name="keywords" lang="de" content="16726-Yuchenca">
+    <!-- jQuery -->
+    <script type="text/javascript" src="./js/jQuery-3.3.1.js"></script>
+    <!-- Bootstrap -->
+    <link type="text/css" href="./css/bootstrap.min.css" rel='stylesheet'>
+    <script type="text/javascript" src="./js/bootstrap.min.js"></script>
+    <!-- main -->
+    <link type="text/css" href="./css/main.css" rel='stylesheet'>
+    <script type="text/javascript" src="./js/main.js"></script>
+    <!-- vanta -->
+    <script type="text/javascript" src="./js/three.min.js"></script>
+    <script type="text/javascript" src="./js/ring.min.js"></script>
+    <script type="text/javascript" src="./js/cloud.min.js"></script>
+</head>
+
+<body>
+    <div id="cloud" style="width:100%;height:100%">
+        <!-- title -->
+        <div class="container">
+            <div class="row">
+                <div class="col-12 mx-12">
+                    <div id="title" class="text-center">
+                        <span id="title-top" class="font-weight-bold">16726 Learning-based Image Synthesis Spring 22</span>
+                        <br>
+                        <span id="title-bot">Joshua Cao | Carnegie Mellon University</span>
+                    </div>
+                </div>
+            </div>
+            <!-- navigation -->
+            <ul id="navigation" class="nav nav-tabs font-weight-bold text-center" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="a1-tab" data-toggle="tab" href="#a1" role="tab" aria-controls="a1" aria-selected="false">Assignment1</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="a2-tab" data-toggle="tab" href="#a2" role="tab" aria-controls="a2" aria-selected="false">Assignment2</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="a3-tab" data-toggle="tab" href="#a3" role="tab" aria-controls="a3" aria-selected="false">Assignment3</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="a4-tab" data-toggle="tab" href="#a4" role="tab" aria-controls="a4" aria-selected="false">Assignment4</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="a5-tab" data-toggle="tab" href="#a5" role="tab" aria-controls="a5" aria-selected="false">Assignment5</a>
+                </li>
+            </ul>
+        </div>
+        <div class="tab-content container" id="TabContent">
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>About Course</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">
+                            <a class="underline" href="https://learning-image-synthesis.github.io/sp22/" target="_blank">16-726 Learning-Based Image Synthesis / Spring 2022</a> is led by <a class="underline" href="https://www.cs.cmu.edu/~junyanz/" target="_blank">Professor Jun-yan Zhu</a>, and assisted by TAs <a class="underline" href="https://peterwang512.github.io/" target="_blank">Sheng-Yu Wang</a> and <a class="underline" href="https://linzhiqiu.github.io/" target="_blank">Zhi-Qiu Lin</a>.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            This course introduces machine learning methods for image and video synthesis. The objectives of synthesis research vary from modeling statistical distributions of visual data, through realistic picture-perfect recreations of the world in graphics, and all the way to providing interactive tools for artistic expression. Key machine learning algorithms will be presented, ranging from classical learning methods (e.g., nearest neighbor, PCA, Markov Random Fields) to deep learning models (e.g., ConvNets, deep generative models, such as GANs and VAEs). We will also introduce image and video forensics methods for detecting synthetic content. In this class, students will learn to build practical applications and create new visual effects using their own photos and videos.
+                        </p>
+                        <h2>Assigment Summary</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <div class="row mx-1">
+                            <div class="col-12">
+                                <p class="col-xs-12">
+                                    <table class="table">
+                                        <thead>
+                                            <tr><th scope="col"></th><th scope="col">Topic</th><th scope="col">Abstract</th><th scope="col">Reference</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><th scope="row">A1</th><td>Colorizing the Prokudin-Gorskii Photo Collection</td><td>Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum.</td><td>Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per.</td></tr>
+                                            <tr><th scope="row">A2</th><td>Gradient Domain Fusion</td><td></td><td></td></tr>
+                                            <tr><th scope="row">A3</th><td>When Cats meet GANs</td><td></td><td></td></tr>
+                                            <tr><th scope="row">A4</th><td>Neural Style Transfer</td><td></td><td></td></tr>
+                                            <tr><th scope="row">A5</th><td>GAN Photo Editing</td><td></td><td></td></tr>
+                                        </tbody>
+                                    </table>
+                                </p>
+                            </div>
+                        </div>
+                        <h2>Copyright</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">
+                            <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png"></a> All datasets, teaching resources and training networks on this page are copyright by Carnegie Mellon University and published under the <a class="underline" rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>. This means that you must attribute the work in the manner specified by the authors, you may not use this work for commercial purposes and if you alter, transform, or build upon this work, you may distribute the resulting work only under the same license.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="a1" role="tabpanel" aria-labelledby="a1-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>Assignment #1</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
+                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
+                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
+                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
+                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="a2" role="tabpanel" aria-labelledby="a2-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>Assignment #2</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
+                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
+                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
+                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
+                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="a3" role="tabpanel" aria-labelledby="a3-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>Assignment #3</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
+                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
+                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
+                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
+                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="a4" role="tabpanel" aria-labelledby="a4-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>Assignment #4</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
+                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
+                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
+                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
+                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="a5" role="tabpanel" aria-labelledby="a5-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>Assignment #5</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
+                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
+                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
+                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
+                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- footer -->
+        <div id="footer" class="text-center py-3">©2022 Copyright | <a href="http://caoyuchen.github.io" target="_blank">Joshua Cao</a> | yuchenca@andrew.cmu.edu</div>
+    </div>
+</body>
+
+</html>
+<!-- cloud effect -->
+<script>
+VANTA.CLOUDS2({
+    el: "#cloud",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 1200,
+    minWidth: 1920,
+    scale: 1.00,
+    backgroundColor: 0x161515,
+    skyColor: 0x3a8ebe,
+    cloudColor: 0x808896,
+    lightColor: 0xfcf6f6,
+    texturePath: "./media/noise.png"
+})
+</script>

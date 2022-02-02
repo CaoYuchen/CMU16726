@@ -1,0 +1,158 @@
+@font-face {
+  font-family: SourceSansPro;
+  src: url(SourceSansPro-Regular.ttf);
+}
+
+
+body {
+    font-family: SourceSansPro;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size:100%;
+    z-index: -2;
+}
+
+
+#title {
+	background: rgba(96,176,240,0);
+	color: white;
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+#TabContent{
+    background: rgba(255,255,255,0.15);
+}
+
+#navigation {
+	background:#f8f9fa00;
+}
+
+.underline {
+	text-decoration: underline;
+}
+
+#footer a {
+	color: #444444 !important;
+	text-decoration: underline;
+}
+
+#footer {
+    background: rgba(96,176,240,0) !important;
+}
+
+#navigation a {
+	color: white !important;
+}
+
+.text-tab {
+	text-decoration: underline;
+}
+
+.content-title {
+	font-size: 30px;
+	margin-top: 20px;
+}
+
+p {
+	font-size: 20px;
+	text-align: justify;
+}
+
+.small-font{
+	font-size: 15px;
+	text-align: justify;
+}
+
+/*.tab-space {
+  	padding-left:5em;
+}
+
+.tab-space-sub {
+  	padding-left:8em;
+}*/
+
+
+@media screen and (min-width:375px) {
+    #title-top {
+    	font-size: 5px
+    }
+    #title-bot {
+    	font-size: 0px
+    }
+    #navigation a {
+    	font-size: 6px;
+    }
+    #footer {
+    	font-size:5px;
+    }
+}
+
+
+@media screen and (min-width:576px) {
+    #title-top {
+    	font-size: 20px
+    }
+    #title-bot {
+    	font-size: 0px
+    }
+    #navigation a {
+    	font-size: 7px;
+    }}
+    #footer {
+    	font-size:6px;
+    }
+}
+
+@media screen and (min-width:768px) {
+    #title-top {
+    	font-size: 25px
+    }
+    #title-bot {
+    	font-size: 17px
+    }
+    #navigation a {
+    	font-size: 11px;
+    }
+    #footer {
+    	font-size:10px;
+    }
+}
+
+@media screen and (min-width:992px) {
+    #title-top {
+    	font-size: 33px
+    }
+    #title-bot {
+    	font-size: 20px
+    }
+    #navigation a {
+    	font-size: 15px;
+    }
+    #footer {
+    	font-size:14px;
+    }
+}
+
+@media screen and (min-width:1200px) {
+    #title-top {
+    	font-size: 37px
+    }
+    #title-bot {
+    	font-size: 22px
+    }
+    #navigation a {
+    	font-size: 17px;
+    }
+}
+
+@media screen and (min-width:1600px) {
+    #title-top {
+    	font-size: 45px
+    }
+    #title-bot {
+    	font-size: 25px
+    }
+    #navigation a {
+    	font-size: 17px;
+    }
+}
