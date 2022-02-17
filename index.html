@@ -62,10 +62,10 @@ Webiste: 16726 course website
             <!-- navigation -->
             <ul id="navigation" class="nav nav-tabs font-weight-bold text-center" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+                    <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="false">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="a1-tab" data-toggle="tab" href="#a1" role="tab" aria-controls="a1" aria-selected="false">Assignment1</a>
+                    <a class="nav-link active" id="a1-tab" data-toggle="tab" href="#a1" role="tab" aria-controls="a1" aria-selected="true">Assignment1</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="a2-tab" data-toggle="tab" href="#a2" role="tab" aria-controls="a2" aria-selected="false">Assignment2</a>
@@ -82,7 +82,7 @@ Webiste: 16726 course website
             </ul>
         </div>
         <div class="tab-content container" id="TabContent">
-            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>About Course</h2>
@@ -103,7 +103,11 @@ Webiste: 16726 course website
                                             <tr><th scope="col"></th><th scope="col">Topic</th><th scope="col">Abstract</th><th scope="col">Reference</th></tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th scope="row">A1</th><td>Colorizing the Prokudin-Gorskii Photo Collection</td><td>Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum.</td><td>Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per.</td></tr>
+                                            <tr><th scope="row">A1</th><td>Colorizing the Prokudin-Gorskii Photo Collection</td><td>Implement SSD, pyramid structure, USM, auto crop, contrast methods </td><td>
+                                                <a class="underline" href="http://lcweb2.loc.gov/master/pnp/prok/" target="_blank">Dataset</a><br>
+                                                <a class="underline" href="https://en.wikipedia.org/wiki/Unsharp_masking" target="_blank">USM</a><br>
+                                                <a class="underline" href="https://en.wikipedia.org/wiki/Hough_transform" target="_blank">Hough Transform</a><br>
+                                            </td></tr>
                                             <tr><th scope="row">A2</th><td>Gradient Domain Fusion</td><td></td><td></td></tr>
                                             <tr><th scope="row">A3</th><td>When Cats meet GANs</td><td></td><td></td></tr>
                                             <tr><th scope="row">A4</th><td>Neural Style Transfer</td><td></td><td></td></tr>
@@ -121,16 +125,125 @@ Webiste: 16726 course website
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="a1" role="tabpanel" aria-labelledby="a1-tab">
+            <div class="tab-pane fade show active" id="a1" role="tabpanel" aria-labelledby="a1-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>Assignment #1</h2>
                         <hr class="col-xs-12 mr-4">
-                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
-                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
-                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
-                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
-                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                        <h3>Introduction</h3>
+                        <p class="col-xs-12 mr-4">
+                            The Prokudin-Gorskii image collection from the Library of Congress is a series of glass plate negative photographs taken by Sergei Mikhailovich Prokudin-Gorskii. To view these photographs in color digitally, one must overlay the three images and display them in their respective RGB channels. However, due to the technology used to take these images, the three photos are not perfectly aligned. The goal of this project is to automatically align, clean up, and display a single color photograph from a glass plate negative.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Direct Method</h3>
+                        <p class="col-xs-12 mr-4">
+                            Before diving into algorithms, I decide to blend R, G, B images directly and have an intuitive feeling of the tasks, which at the same time provides a reference to compare how far my algorithm can go. There are total 1 small jpeg and 9 large tiff images from the given dataset. Their direct blending goes as below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/direct/cathedral.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/emir.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/harvesters.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/icon.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/lady.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/self_portrait.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/three_generations.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/train.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/turkmen.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/direct/village.jpg" height="180px" alt="image_left">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>SSD & NCC Alignment</h3>
+                        <p class="col-xs-12 mr-4">
+                            I implement both SSD and NCC to compare the small patch's similarity for alignment, the search range is [-15,15], and the algorithm works both well on the small jpeg image as shown below. To speed up the calculation, I also cropped 20% of each side of the image to decrease calculation on the edge. However, to deal with larger image, not only the search range is not large enough, but also the calulation takes extremely long. Therefore, the pyramid structure comes to practice.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/pyramid/cathedral.jpg" height="280px" alt="image_left">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Pyramid Aligment</h3>
+                        <p class="col-xs-12 mr-4">
+                            I use log2(min(image.shape)) to find out how many mamixmum layers the image can have, and add conditions to only apply the pyramid algorithm for images larger than 512*512, and the small image can directly use [-15,15] SSD search. For large images, my starting layer is a size around 265 pixels(2^8 as first layer), and exhaustively search till the original image size, because I realized missing final layer will give me color bias all the time(misalignment of color channel is very easy to detect even though it's just small pixels). The first implementation of my method took 180s for one image. To speed it up, I recursively decrease search region by 2 each time to shorten it to 55 seconds per iamge, because the center of search box is determined by last layer, so the deeper algorithm search, the smaller search range it requires to find the best alignment. The output is listed as below. As you can see, most of the images are aligned quite well but image like the piece of Sergei Mikhailovich Prokudin-Gorskii, work even worse than direct alignment, this is because the brightness of the images are different, therefore, I use an USM(Unsharp Mask) algorithm to fix the issue.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/pyramid/cathedral.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/emir.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/harvesters.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/icon.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/lady.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/self_portrait.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/three_generations.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/train.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/turkmen.jpg" height="180px" alt="image_left">
+                                <img src="./media/a1/pyramid/village.jpg" height="180px" alt="image_left">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h2>Extra Credits</h2>
+                        <h3>USM Unsharp Mask</h3>
+                        <p class="col-xs-12 mr-4">
+                            The USM algorithm is mainly to sharpen or soften the edge of images, and allows accurate SSD difference to make better alignment. The algorithm is called for each recursion in the pyramid alignment, and it first uses Gaussian Blur to blur the single channel(gray) image, and subtract it from the original image, then I take the region of difference that is larger than certain threshold and subtract them from the original image and multiple certain constant parameters. Here I use subraction because I notice certain edge needs to be softened instead of being sharpened, due to some disturbing edges stand out too much in the original image that makes SSD find the wrong alignment. The USM specifically improves the quality of this image:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/usm/emir.jpg" height="280px" alt="image_left">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Crop Image</h3>
+                        <p class="col-xs-12 mr-4">
+                            To get rid of the borders, I mainly use two cropping method, the first one is to keep area only for all three channels have contents, and remove those blank area caused by alignment, this is implemented by retriving shift of each single channel image. But this method can't deal so well with the region that is originally black or white outside the image. Then I use a MSE(Mean Square Error) method to calculate each row and each column's error, and set up when three adjacent rows or columns all are smaller than certain threshold, it is the area should be cropped. The result shows as below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/crop/cathedral.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/emir.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/harvesters.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/icon.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/lady.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/self_portrait.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/three_generations.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/train.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/turkmen.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/crop/village.jpg" height="200px" alt="image_left">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Add Contrast</h3>
+                        <p class="col-xs-12 mr-4">
+                            The contrast method is pretty straight-forward, I just calculate the accumulative histogram of the image, and take 5% and 95% as 0 and 255 respectively, and stretch the color value in between so that the contrast of the main image increase.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/contrast/cathedral.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/emir.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/harvesters.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/icon.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/lady.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/self_portrait.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/three_generations.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/train.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/turkmen.jpg" height="200px" alt="image_left">
+                                <img src="./media/a1/contrast/village.jpg" height="200px" alt="image_left">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Other Dataset</h3>
+                        <p class="col-xs-12 mr-4">
+                            I find some other similar <a class="underline" href="http://lcweb2.loc.gov/master/pnp/prok/" target="_blank">dataset</a> that has pretty large tiff image to test the algorithm. The result shows as below
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a1/outdata_crop/00001a.jpg" height="220px" alt="image_left">
+                                <img src="./media/a1/outdata_crop/00002u.jpg" height="220px" alt="image_left">
+                                <img src="./media/a1/outdata_crop/00004a.jpg" height="220px" alt="image_left">
+                                <img src="./media/a1/outdata_crop/00005u.jpg" height="220px" alt="image_left">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -197,11 +310,11 @@ Webiste: 16726 course website
 <script>
 VANTA.CLOUDS2({
     el: "#cloud",
-    mouseControls: true,
-    touchControls: true,
+    mouseControls: false,
+    touchControls: false,
     gyroControls: false,
-    minHeight: 1200,
-    minWidth: 1920,
+    minHeight: 200,
+    minWidth: 400,
     scale: 1.00,
     backgroundColor: 0x161515,
     skyColor: 0x3a8ebe,
