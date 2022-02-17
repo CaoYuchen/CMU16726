@@ -133,3 +133,4 @@ dmypy.json
 a1/data
 a1/output
 a1/.ipynb_checkpoints
+a1/dataset_extra
