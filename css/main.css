@@ -6,9 +6,10 @@
 
 body {
     font-family: SourceSansPro;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
     background-attachment: fixed;
     background-size:100%;
+    background-image: url("../media/cloud.jpg");
     z-index: -2;
 }
 
@@ -25,6 +26,7 @@ body {
 
 #navigation {
 	background:#f8f9fa00;
+    margin-left: 13.5%;
 }
 
 .underline {
