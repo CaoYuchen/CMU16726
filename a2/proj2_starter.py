@@ -9,10 +9,62 @@ import numpy as np
 import cv2
 import imageio
 import matplotlib.pyplot as plt
+import scipy.sparse as sp
+from scipy.sparse.linalg import lsqr
+import time
 
 
-def toy_recon(image):
-    return np.zeros_like(image)
+def toy_recon(image, loop=False):
+    imh, imw = image.shape
+    n_pixel = imh * imw
+    n_equation = n_pixel * 2 + 1  # x, y direction, (0,0) coord
+    im2var = np.arange(n_pixel).reshape((imh, imw)).astype(int)
+    A = sp.lil_matrix((n_equation, n_pixel))
+    b = np.zeros((n_equation, 1))
+    # loop method
+    if loop:
+        e = 0
+        # objective 1
+        for y in range(imh):
+            for x in range(imw - 1):
+                A[e, im2var[y, x + 1]] = 1
+                A[e, im2var[y, x]] = -1
+                b[e] = image[y, x + 1] - image[y, x]
+                e += 1
+        # objective 2
+        for y in range(imh - 1):
+            for x in range(imw):
+                A[e, im2var[y + 1, x]] = 1
+                A[e, im2var[y, x]] = -1
+                b[e] = image[y + 1, x] - image[y, x]
+                e += 1
+        # (0,0)
+        A[e, im2var[0, 0]] = 1
+        b[e] = image[0, 0]
+    # non-loop method
+    if not loop:
+        s = image
+        a1 = np.eye(n_pixel, n_pixel, dtype=int)
+        a2 = np.roll(a1, -1, axis=1)
+        a2[:, -1] = a1[:, -1]
+        a3 = (a2 - a1).reshape(n_pixel, imh, imw)
+        a3 = np.transpose(a3, (0, 2, 1)).reshape(n_pixel, n_pixel)
+        A[0:n_pixel, :] = a2 - a1
+        A[n_pixel:-1, :] = a3
+        A[-1, im2var[0, 0]] = 1
+
+        b1 = s
+        b2 = np.roll(b1, -1, axis=1)
+        b2[:, -1] = b1[:, -1]
+        b3 = np.roll(b1, -1, axis=0)
+        b3[-1, :] = b1[-1, :]
+        b[0:n_pixel] = (b2 - b1).reshape((n_pixel, 1))
+        b[n_pixel:-1] = (b3 - b1).reshape((n_pixel, 1))
+        b[-1] = s[0, 0]
+
+    v = lsqr(A.tocsr(), b)[0] * 255
+    output = v.reshape((imh, imw)).astype(int)
+    return output
 
 
 def poisson_blend(fg, mask, bg):
@@ -49,7 +101,10 @@ if __name__ == '__main__':
     # Example script: python proj2_starter.py -q toy
     if args.question == "toy":
         image = imageio.imread('./data/toy_problem.png') / 255.
-        image_hat = toy_recon(image)
+
+        timer = time.time()
+        image_hat = toy_recon(image, loop=True)
+        print("Time used:" + str(time.time() - timer))
 
         plt.subplot(121)
         plt.imshow(image, cmap='gray')
