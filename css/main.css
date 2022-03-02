@@ -9,7 +9,8 @@ body {
     background-repeat: repeat;
     background-attachment: fixed;
     background-size:100%;
-    background-image: url("../media/cloud.jpg");
+    /*background-image: url("../media/cloud.jpg");*/
+    /*background-color:*/
     z-index: -2;
 }
 

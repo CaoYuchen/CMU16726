@@ -75,7 +75,48 @@ def poisson_blend(fg, mask, bg):
     :param bg: (H, W, C) target image / background
     :return: (H, W, C)
     """
-    return fg * mask + bg * (1 - mask)
+    imh, imw, channels = min(fg.shape, bg.shape)
+    n_pixels = imh * imw
+    im2var = np.arange(n_pixels).reshape((imh, imw)).astype(int)
+    v_rgb = np.empty((imh, imw, channels), dtype=int)
+    A = sp.lil_matrix((n_pixels, n_pixels))
+    mask_index = np.where(mask == True)
+    n_mask = len(mask_index[0])
+    for c in range(channels):
+        b = np.zeros((n_pixels, 1))
+        for index in range(n_mask):
+            y = mask_index[0][index]
+            x = mask_index[1][index]
+            e = (y - 1) * imw + x
+            # construct A, only construct once because A is same for 3 channels
+            if c == 0:
+                if mask[y - 1, x]:
+                    A[e, im2var[y - 1, x]] = -1
+                if mask[y + 1, x]:
+                    A[e, im2var[y + 1, x]] = -1
+                if mask[y, x - 1]:
+                    A[e, im2var[y, x - 1]] = -1
+                if mask[y, x + 1]:
+                    A[e, im2var[y, x + 1]] = -1
+                # center point is 4
+                A[e, im2var[y, x]] = 4
+
+            # construct b, construct 3 times because b is different for r, g, b
+            b[e] = 4 * fg[y, x, c] - fg[y - 1, x, c] - fg[y + 1, x, c] - fg[y, x + 1, c] - fg[y, x - 1, c]
+            if not mask[y - 1, x]:
+                b[e] += bg[y - 1, x, c]
+            if not mask[y + 1, x]:
+                b[e] += bg[y + 1, x, c]
+            if not mask[y, x - 1]:
+                b[e] += bg[y, x - 1, c]
+            if not mask[y, x + 1]:
+                b[e] += bg[y, x + 1, c]
+
+        # calculate lsq, only the mask area is what we want
+        v = lsqr(A.tocsr(), b)[0] * 255
+        v_rgb[:, :, c] = v.reshape((imh, imw)).astype(int)
+
+    return v_rgb / 255. * mask + bg * (1 - mask)
 
 
 def mixed_blend(fg, mask, bg):
@@ -131,8 +172,9 @@ if __name__ == '__main__':
         bg = bg / 255.
         mask = (mask.sum(axis=2, keepdims=True) > 0)
 
+        timer = time.time()
         blend_img = poisson_blend(fg, mask, bg)
-
+        print("Time used:" + str(time.time() - timer))
         plt.subplot(121)
         plt.imshow(fg * mask + bg * (1 - mask))
         plt.title('Naive Blend')
