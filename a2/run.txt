@@ -1,0 +1,4 @@
+-q toy
+-q blend -s data/source_01_newsource.png -t data/target_01.jpg -m data/target_01_mask.png
+-q mixed -s data/source_01_newsource.png -t data/target_01.jpg -m data/target_01_mask.png
+-q color2gray -s data/colorBlindTest.png
