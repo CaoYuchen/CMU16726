@@ -120,8 +120,69 @@ def poisson_blend(fg, mask, bg):
 
 
 def mixed_blend(fg, mask, bg):
-    """EC: Mix gradient of source and target"""
-    return fg * mask + bg * (1 - mask)
+    """
+    EC: Mix gradient of source and target
+    :param fg: (H, W, C) source texture / foreground object
+    :param mask: (H, W, 1)
+    :param bg: (H, W, C) target image / background
+    :return: (H, W, C)
+    """
+    imh, imw, channels = min(fg.shape, bg.shape)
+    n_pixels = imh * imw
+    im2var = np.arange(n_pixels).reshape((imh, imw)).astype(int)
+    v_rgb = np.empty((imh, imw, channels), dtype=int)
+    A = sp.lil_matrix((n_pixels, n_pixels))
+    mask_index = np.where(mask == True)
+    n_mask = len(mask_index[0])
+    for c in range(channels):
+        b = np.zeros((n_pixels, 1))
+        for index in range(n_mask):
+            y = mask_index[0][index]
+            x = mask_index[1][index]
+            e = (y - 1) * imw + x
+            # construct A, only construct once because A is same for 3 channels
+            if c == 0:
+                if mask[y - 1, x]:
+                    A[e, im2var[y - 1, x]] = -1
+                if mask[y + 1, x]:
+                    A[e, im2var[y + 1, x]] = -1
+                if mask[y, x - 1]:
+                    A[e, im2var[y, x - 1]] = -1
+                if mask[y, x + 1]:
+                    A[e, im2var[y, x + 1]] = -1
+                # center point is 4
+                A[e, im2var[y, x]] = 4
+
+            # mixed gradients
+            s1 = fg[y, x, c] - fg[y - 1, x, c]
+            t1 = bg[y, x, c] - bg[y - 1, x, c]
+            s2 = fg[y, x, c] - fg[y + 1, x, c]
+            t2 = bg[y, x, c] - bg[y + 1, x, c]
+            s3 = fg[y, x, c] - fg[y, x - 1, c]
+            t3 = bg[y, x, c] - bg[y, x - 1, c]
+            s4 = fg[y, x, c] - fg[y, x + 1, c]
+            t4 = bg[y, x, c] - bg[y, x + 1, c]
+
+            # construct b, construct 3 times because b is different for r, g, b
+            b[e] = 0
+            b[e] += s1 if abs(s1) > abs(t1) else t1
+            b[e] += s2 if abs(s2) > abs(t2) else t2
+            b[e] += s3 if abs(s3) > abs(t3) else t3
+            b[e] += s4 if abs(s4) > abs(t4) else t4
+            if not mask[y - 1, x]:
+                b[e] += bg[y - 1, x, c]
+            if not mask[y + 1, x]:
+                b[e] += bg[y + 1, x, c]
+            if not mask[y, x - 1]:
+                b[e] += bg[y, x - 1, c]
+            if not mask[y, x + 1]:
+                b[e] += bg[y, x + 1, c]
+
+        # calculate lsq, only the mask area is what we want
+        v = lsqr(A.tocsr(), b)[0] * 255
+        v_rgb[:, :, c] = v.reshape((imh, imw)).astype(int)
+
+    return (v_rgb / 255. * mask + bg * (1 - mask))
 
 
 def color2gray(rgb_image):
