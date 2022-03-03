@@ -285,9 +285,123 @@ Webiste: 16726 course website
                         <hr class="col-xs-12 mr-4">
                         <h3>Introduction</h3>
                         <p class="col-xs-12 mr-4">
-                            The Prokudin-Gorskii image collection from the Library of Congress is a series of glass plate negative photographs taken by Sergei Mikhailovich Prokudin-Gorskii. To view these photographs in color digitally, one must overlay the three images and display them in their respective RGB channels. However, due to the technology used to take these images, the three photos are not perfectly aligned. The goal of this project is to automatically align, clean up, and display a single color photograph from a glass plate negative.
+                            The project explores the gradient-domain processing in the practice of image blending, tone mapping and non-photorealistic rendering. The method mainly focuses on the Poisson Blending algorithm. The tasks include primary gradient minimization, 4 neighbours based Poisson blending, mixed gradient Poisson blending and grayscale intensity preserved color2gray method. The whole project is implemented in Python.
                         </p>
                         <hr class="col-xs-12 mr-4">
+                        <h3>Toy Problem</h3>
+                        <p class="col-xs-12 mr-4">
+                            The toy problem is a simplifed version of Poisson blending algorithm, therefore it helps understanding the Poisson blending a lot. The major functions are three, to calculate the gradient of x axis and y axis, and to align the left-top corner (0,0) of the image:
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            <b>
+                            ((v(x+1,y)−v(x,y))−(s(x+1,y)−s(x,y)))**2<br>
+                            ((v(x,y+1)−v(x,y))−(s(x,y+1)−s(x,y)))**2<br>
+                             (v(1,1)−s(1,1))**2
+                            </b>
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            We use the equations to loop through each pixel of the source image to construct A and b. By solving the least square form of Av=b, we can get the synthesized image v. Say the given gray image size is H by W, A's dimension is <b>H*W</b> by <b>2*H*W+1</b>, b's dimension is <b>H*W</b> by <b>1</b>. The result is pretty much to test if we can copy the original image, as shown below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/toy.png" height="400px" alt="image_left">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            I implemented it in both loop method and non-loop method, the interesting thing is that with loop method, it only takes around 0.4s, whereas with the non-loop method, which is supposed to be faster in Python environment than loop, turns out to take around 10s. I think the major reason is that sparse matrix's arithmetic calculation is more expensive than directly assign value to coordinates. In the non-loop method, I mainly use lil_matrix to construct sparse matrix, and use np.roll, np.transpose to construct A matrix. Finally I decide to use the loop method for the rest of the task.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Poisson Blending</h3>
+                        <p class="col-xs-12 mr-4">
+                            Based on toy problem's hint, Poisson Blending explores the four neighbour of each pixel, follow the equation below that <b>v</b> is the synthesized vector that we need to solve, <b>s</b> is the source image in the size of target image(but we're only interested in the masked source image), <b>t</b> is the target image:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/poisson.png" height="80px" alt="image_left">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            In the equation, each <b>i</b> deals with 4 <b>j</b>, i.e. the same <b>i</b> is calculated 4 times with 4 different neighbour <b>j</b>. The left part considers the condition if all the neighbour of i is still inside the mask, and the right part considers the neighbour not all inside the mask. Notice the difference in code is that for the right part, <b>tj</b> is used to construct parameter <b>b</b>, whereas for the left part, <b>vj</b> is used to construct parameter <b>A</b>.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            Also, the given image now has RGB, 3 channels, therefore we need to calculate each channel separately. When I implemented it, I consider that <b>A</b> matrix is always the same for 3 channels, but <b>b</b> are different for each channel, therefore I only calculate <b>A</b> once and <b>b</b> 3 times to speed up the algorithm. What's more, since the we only need to generate image from the maksed source image's coordinate, I only loop through this area to speed up. And finally I merged three v together to get new RGB image. The average speed is related to the image size, to deal with the given example of <b>130x107</b>(source image) and <b>250x333</b>(taget image), it generally takes around 20s.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            However, the naive Poisson Blending has some issue to deal with blending the image seamlessly, which is because only considering the source neighbour is not enough for strong difference of target and source images. As you can see the image below, the inner part of the ballon house is little blur and not blended so well with the background. Therefore, we need to implement Mixed Blending.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/house.jpg" height="150px">
+                                <img src="./media/a2/house_mask.png" height="150px">
+                                <img src="./media/a2/mountain.jpg" height="350px">
+                                <img src="./media/a2/ballon_blend.png" height="600px">
+                            </div>
+                        </div>
+                        <h2>Extra Credits</h2>
+                        <h3>Mixed Gradients</h3>
+                        <p class="col-xs-12 mr-4">
+                            Mixed gradients is actually pretty straight forward based on Poisson Blending, we just add one condition that instead calculating the gradient of source image <b>s</b>, we compare the gradient of <b>s</b> and gradient of <b>t</b>, and take the larger one so that it can better blend when the difference of source and target image are large. The comparison of the same image can be seen as below(The left is blendered without Mixed gradients.):
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/ballon_blend.png" height="500px">
+                                <img src="./media/a2/ballon.png" height="500px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            The given example of bear and pool is below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/source_01.jpg" height="150px">
+                                <img src="./media/a2/source_01_mask.png" height="150px">
+                                <img src="./media/a2/target_01.jpg" height="350px">
+                                <img src="./media/a2/poisson_blend.png" height="600px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            There are some more generated blending images:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/obama.jpg" height="150px">
+                                <img src="./media/a2/obama_mask.png" height="150px">
+                                <img src="./media/a2/mona_lisa.jpg" height="300px">
+                                <img src="./media/a2/obama.png" height="600px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/swimmer.jpg" height="100px">
+                                <img src="./media/a2/swimmer_mask.png" height="100px">
+                                <img src="./media/a2/road.jpg" height="250px">
+                                <img src="./media/a2/swimmer.png" height="600px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            And there is a failure case where the colorful Patrix can't blend so well with the gray-scale like moon image:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/patrick.jpg" height="100px">
+                                <img src="./media/a2/patrick_mask.png" height="100px">
+                                <img src="./media/a2/moon.jpg" height="200px">
+                                <img src="./media/a2/patrick.png" height="600px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            This is mainly because there is upper limitation of the blending algorithm to adjust the color, if the source image and target image have too large difference, the algorithm will reach its limitation to find the solution that best approximate the least square function.
+                        </p>
+                        <h3>Color2Gray</h3>
+                        <p class="col-xs-12 mr-4">
+                            The Color2Gray method first turns RGB image to the HSV color space, and only consider the S and V channels to represent the color contrast and intensity respectively. In this way, we can keep the color contrast of rgb image and preserve the grayscale intensity at the same time. The algorithm runs similar to the Mixed Gradient where source and target image are S and V. The result is shown as below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a2/colorBlindTest.png" height="300px">
+                                <img src="./media/a2/color2gray.png" height="600px">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
