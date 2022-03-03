@@ -10,7 +10,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/a2/proj2_starter.py" />
-    <option name="PARAMETERS" value="-q toy" />
+    <option name="PARAMETERS" value="-q blend -s data/house_newsource.png -t data/mountain.jpg -m data/mountain_mask.png" />
     <option name="SHOW_COMMAND_LINE" value="true" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
