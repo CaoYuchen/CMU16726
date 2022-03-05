@@ -1,4 +1,4 @@
-# CMU 16-726 Learning-Based Image Synthesis / Spring 2021, Assignment 3
+# CMU 16-726 Learning-Based Image Synthesis / Spring 2022, Assignment 3
 #
 # The code base is based on the great work from CSC 321, U Toronto
 # https://www.cs.toronto.edu/~rgrosse/courses/csc321_2018/assignments/a4-code.zip
@@ -38,7 +38,10 @@ import numpy as np
 # Local imports
 import utils
 from data_loader import get_data_loader
-from models import CycleGenerator, DCDiscriminator
+from models import CycleGenerator, DCDiscriminator, PatchDiscriminator
+
+from diff_augment import DiffAugment
+policy = 'color,translation,cutout' # If your dataset is as small as ours (e.g.,
 
 SEED = 11
 
@@ -80,12 +83,12 @@ def create_model(opts):
     G_XtoY = model_dict[opts.gen](conv_dim=opts.g_conv_dim, init_zero_weights=opts.init_zero_weights, norm=opts.norm)
     G_YtoX = model_dict[opts.gen](conv_dim=opts.g_conv_dim, init_zero_weights=opts.init_zero_weights, norm=opts.norm)
 
-    model_dict = {'dc': DCDiscriminator}
+    model_dict = {'dc': DCDiscriminator, 'patch': PatchDiscriminator}
     D_X = model_dict[opts.disc](conv_dim=opts.d_conv_dim, norm=opts.norm)
     D_Y = model_dict[opts.disc](conv_dim=opts.d_conv_dim, norm=opts.norm)
     print_models(G_XtoY, G_YtoX, D_X, D_Y)
 
-    # todo: B&W add your own initialization here
+    # TODO: B&W add your own initialization here
     # 
 
     if torch.cuda.is_available():
@@ -197,36 +200,35 @@ def training_loop(dataloader_X, dataloader_Y, opts):
         ##             FILL THIS IN            ##
         #########################################
 
-        # Train with real images
-        d_optimizer.zero_grad()
-
         # 1. Compute the discriminator losses on real images
-        D_X_loss =
-        D_Y_loss =
+        D_X_loss = 
+        D_Y_loss = 
 
         d_real_loss = D_X_loss + D_Y_loss
-        d_real_loss.backward()
-        d_optimizer.step()
-        logger.add_scalar('D/XY/real', D_X_loss, iteration)
-        logger.add_scalar('D/YX/real', D_Y_loss, iteration)
-        # Train with fake images
-        d_optimizer.zero_grad()
 
         # 2. Generate fake images that look like domain X based on real images in domain Y
-        fake_X =
+        fake_X = 
 
         # 3. Compute the loss for D_X
+        D_X_loss = 
 
         # 4. Generate fake images that look like domain Y based on real images in domain X
-        fake_Y =
+        fake_Y = 
 
         # 5. Compute the loss for D_Y
-        D_Y_loss =
+        D_Y_loss = 
 
         d_fake_loss = D_X_loss + D_Y_loss
-        if iteration % 2 == 0:
-            d_fake_loss.backward()
-            d_optimizer.step()
+
+        # sum up the losses and update D_X and D_Y
+        d_optimizer.zero_grad()
+        d_total_loss = d_real_loss + d_fake_loss
+        d_total_loss.backward()
+        d_optimizer.step()
+
+        # plot the losses in tensorboard
+        logger.add_scalar('D/XY/real', D_X_loss, iteration)
+        logger.add_scalar('D/YX/real', D_Y_loss, iteration)
         logger.add_scalar('D/XY/fake', D_X_loss, iteration)
         logger.add_scalar('D/YX/fake', D_Y_loss, iteration)
 
@@ -239,47 +241,41 @@ def training_loop(dataloader_X, dataloader_Y, opts):
         #########################################
         ##    FILL THIS IN: Y--X-->Y CYCLE     ##
         #########################################
-        g_optimizer.zero_grad()
 
         # 1. Generate fake images that look like domain X based on real images in domain Y
-        fake_X =
+        fake_X = 
 
         # 2. Compute the generator loss based on domain X
-        g_loss =
+        g_loss = 
         logger.add_scalar('G/XY/fake', g_loss, iteration)
 
         if opts.use_cycle_consistency_loss:
-            reconstructed_Y = G_XtoY(fake_X)
             # 3. Compute the cycle consistency loss (the reconstruction loss)
-            cycle_consistency_loss =
+            cycle_consistency_loss = 
+
             g_loss += opts.lambda_cycle * cycle_consistency_loss
             logger.add_scalar('G/XY/cycle', opts.lambda_cycle * cycle_consistency_loss, iteration)
-
-        g_loss.backward()
-        g_optimizer.step()
-
-
 
         #########################################
         ##    FILL THIS IN: X--Y-->X CYCLE     ##
         #########################################
 
-        g_optimizer.zero_grad()
-
         # 1. Generate fake images that look like domain Y based on real images in domain X
-        fake_Y = G_XtoY(images_X)
+        fake_Y = 
 
         # 2. Compute the generator loss based on domain Y
-        g_loss =
+        g_loss += 
         logger.add_scalar('G/YX/fake', g_loss, iteration)
 
         if opts.use_cycle_consistency_loss:
-            reconstructed_X = G_YtoX(fake_Y)
             # 3. Compute the cycle consistency loss (the reconstruction loss)
-            cycle_consistency_loss =
+            cycle_consistency_loss = 
+
             g_loss += opts.lambda_cycle * cycle_consistency_loss
             logger.add_scalar('G/YX/cycle', cycle_consistency_loss, iteration)
 
+        # backprop the aggregated g losses and update G_XtoY and G_YtoX
+        g_optimizer.zero_grad()
         g_loss.backward()
         g_optimizer.step()
 
@@ -334,7 +330,7 @@ def create_parser():
 
     # Model hyper-parameters
     parser.add_argument('--image_size', type=int, default=64, help='The side length N to convert images to NxN.')
-    parser.add_argument('--disc', type=str, default='dc')
+    parser.add_argument('--disc', type=str, default='dc', help='Choose which discriminator to use. choices:[dc|patch]')
     parser.add_argument('--gen', type=str, default='cycle')
     parser.add_argument('--g_conv_dim', type=int, default=32)
     parser.add_argument('--d_conv_dim', type=int, default=32)
@@ -344,7 +340,7 @@ def create_parser():
     parser.add_argument('--init_type', type=str, default='naive')
 
     # Training hyper-parameters
-    parser.add_argument('--train_iters', type=int, default=1000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
+    parser.add_argument('--train_iters', type=int, default=10000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
     parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
@@ -356,7 +352,7 @@ def create_parser():
     parser.add_argument('--X', type=str, default='cat/grumpifyAprocessed', help='Choose the type of images for domain X.')
     parser.add_argument('--Y', type=str, default='cat/grumpifyBprocessed', help='Choose the type of images for domain Y.')
     parser.add_argument('--ext', type=str, default='*.png', help='Choose the type of images for domain Y.')
-    parser.add_argument('--data_aug', type=str, default='deluxe', help='diff / none/ normal')
+    parser.add_argument('--data_preprocess', type=str, default='deluxe', help='data preprocess scheme [basic|deluxe]')
 
     # Saving directories and checkpoint/sample iterations
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_cyclegan')
@@ -371,15 +367,16 @@ def create_parser():
 
 
 if __name__ == '__main__':
-
     parser = create_parser()
     opts = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = opts.gpu
     opts.sample_dir = os.path.join('output/', opts.sample_dir,
                                    '%s_%g' % (opts.X.split('/')[0], opts.lambda_cycle))
-    opts.sample_dir += '%s_%s_%s_%s_%s' % (opts.data_aug, opts.norm, opts.disc, opts.gen, opts.init_type)
+    opts.sample_dir += '%s_%s_%s_%s_%s' % (opts.data_preprocess, opts.norm, opts.disc, opts.gen, opts.init_type)
     if opts.use_cycle_consistency_loss:
         opts.sample_dir += '_cycle'
+    if opts.use_diffaug:
+        opts.sample_dir += '_diffaug'
 
     if os.path.exists(opts.sample_dir):
         cmd = 'rm %s/*' % opts.sample_dir

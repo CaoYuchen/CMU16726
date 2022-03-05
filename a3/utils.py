@@ -1,4 +1,4 @@
-# CMU 16-726 Learning-Based Image Synthesis / Spring 2021, Assignment 3
+# CMU 16-726 Learning-Based Image Synthesis / Spring 2022, Assignment 3
 # The code base is based on the great work from CSC 321, U Toronto
 # https://www.cs.toronto.edu/~rgrosse/courses/csc321_2018/assignments/a4-code.zip
 

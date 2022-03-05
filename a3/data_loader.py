@@ -1,4 +1,4 @@
-# CMU 16-726 Learning-Based Image Synthesis / Spring 2021, Assignment 3
+# CMU 16-726 Learning-Based Image Synthesis / Spring 2022, Assignment 3
 # The code base is based on the great work from CSC 321, U Toronto
 # https://www.cs.toronto.edu/~rgrosse/courses/csc321_2018/assignments/a4-code.zip
 
@@ -30,7 +30,7 @@ class CustomDataSet(Dataset):
 
 
 def get_data_loader(data_path, opts):
-    """Creates data loaders.
+    """Creates training and test data loaders.
     """
     basic_transform = transforms.Compose([
         transforms.Resize(opts.image_size, Image.BICUBIC),
@@ -38,9 +38,9 @@ def get_data_loader(data_path, opts):
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
-    if opts.data_aug == 'basic':
-        transform = basic_transform
-    elif opts.data_aug == 'deluxe':
+    if opts.data_preprocess == 'basic':
+        train_transform = basic_transform
+    elif opts.data_preprocess == 'deluxe':
         # todo: add your code here: below are some ideas for your reference
         # load_size = int(1.1 * opts.image_size)
         # osize = [load_size, load_size]
@@ -49,7 +49,7 @@ def get_data_loader(data_path, opts):
         # transforms.RandomHorizontalFlip()
         pass
 
-    dataset = CustomDataSet(os.path.join('data/', data_path), opts.ext, transform)
+    dataset = CustomDataSet(os.path.join('data/', data_path), opts.ext, train_transform)
     dloader = DataLoader(dataset=dataset, batch_size=opts.batch_size, shuffle=True, num_workers=opts.num_workers)
 
     return dloader

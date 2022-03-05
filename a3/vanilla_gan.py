@@ -1,4 +1,4 @@
-# CMU 16-726 Learning-Based Image Synthesis / Spring 2021, Assignment 3
+# CMU 16-726 Learning-Based Image Synthesis / Spring 2022, Assignment 3
 #
 # The code base is based on the great work from CSC 321, U Toronto
 # https://www.cs.toronto.edu/~rgrosse/courses/csc321_2018/assignments/a4-code.zip
@@ -29,6 +29,9 @@ from torch.utils.tensorboard import SummaryWriter
 import utils
 from data_loader import get_data_loader
 from models import DCGenerator, DCDiscriminator
+
+from diff_augment import DiffAugment
+policy = 'color,translation,cutout'
 
 
 SEED = 11
@@ -163,51 +166,55 @@ def training_loop(train_dataloader, opts):
             ###         TRAIN THE DISCRIMINATOR         ####
             ################################################
 
-            d_optimizer.zero_grad()
-
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
+            # D_real_loss = torch.mean((D(real_images) - 1)**2)
             D_real_loss = 
 
             # 2. Sample noise
-            noise = sample_noise(opts.noise_size)
+            noise = 
 
             # 3. Generate fake images from the noise
-            fake_images =
+            fake_images = 
 
             # 4. Compute the discriminator loss on the fake images
-            D_fake_loss =
+            # D_fake_loss = torch.mean((D(fake_images.detach())) ** 2)
+            D_fake_loss = 
 
-            D_total_loss =
-            if iteration % 2 == 0:
-                D_total_loss.backward()
-                d_optimizer.step()
+            D_total_loss = 
+
+            # update the discriminator D
+            d_optimizer.zero_grad()
+            D_total_loss.backward()
+            d_optimizer.step()
 
             ###########################################
             ###          TRAIN THE GENERATOR        ###
             ###########################################
 
-            g_optimizer.zero_grad()
-
             # FILL THIS IN
             # 1. Sample noise
-            noise =
+            noise = 
 
             # 2. Generate fake images from the noise
-            fake_images =
+            fake_images = 
 
             # 3. Compute the generator loss
-            G_loss =
+            G_loss = 
 
+            # update the generator G
+            g_optimizer.zero_grad()
             G_loss.backward()
             g_optimizer.step()
-
 
             # Print the log info
             if iteration % opts.log_step == 0:
                 print('Iteration [{:4d}/{:4d}] | D_real_loss: {:6.4f} | D_fake_loss: {:6.4f} | G_loss: {:6.4f}'.format(
                        iteration, total_train_iters, D_real_loss.item(), D_fake_loss.item(), G_loss.item()))
-            # todo: add fake loss, real loss, G loss to tensorboard
+                logger.add_scalar('D/fake', D_fake_loss, iteration)
+                logger.add_scalar('D/real', D_real_loss, iteration)
+                logger.add_scalar('D/total', D_total_loss, iteration)
+                logger.add_scalar('G/total', G_loss, iteration)
 
             # Save the generated samples
             if iteration % opts.sample_every == 0:
@@ -246,17 +253,17 @@ def create_parser():
     parser.add_argument('--noise_size', type=int, default=100)
 
     # Training hyper-parameters
-    parser.add_argument('--num_epochs', type=int, default=40)
+    parser.add_argument('--num_epochs', type=int, default=500)
     parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
-    parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
+    parser.add_argument('--lr', type=float, default=0.0002, help='The learning rate (default 0.0002)')
     parser.add_argument('--beta1', type=float, default=0.5)
     parser.add_argument('--beta2', type=float, default=0.999)
 
     # Data sources
-    parser.add_argument('--data', type=str, default='cat/grumpifyBprocessed', help='Choose the type of emojis to generate.')
-    parser.add_argument('--data_aug', type=str, default='deluxe', help='data augmentation diff / basic / deluxe')
-    parser.add_argument('--ext', type=str, default='*.png', help='Choose the type of emojis to generate.')
+    parser.add_argument('--data', type=str, default='cat/grumpifyBprocessed', help='The folder of the training dataset.')
+    parser.add_argument('--data_preprocess', type=str, default='deluxe', help='data preprocess scheme [basic|deluxe]')
+    parser.add_argument('--ext', type=str, default='*.png', help='Choose the file type of images to generate.')
 
     # Directories and checkpoint/sample iterations
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints_vanilla')
@@ -269,13 +276,15 @@ def create_parser():
 
 
 if __name__ == '__main__':
-
     parser = create_parser()
     opts = parser.parse_args()
 
     batch_size = opts.batch_size
     opts.sample_dir = os.path.join('output/', opts.sample_dir,
-                                   '%s_%s' % (os.path.basename(opts.data), opts.data_aug))
+                                   '%s_%s' % (os.path.basename(opts.data), opts.data_preprocess))
+    if opts.use_diffaug:
+        opts.sample_dir += '_diffaug'
+
     if os.path.exists(opts.sample_dir):
         cmd = 'rm %s/*' % opts.sample_dir
         os.system(cmd)
