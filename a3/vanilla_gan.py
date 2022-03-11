@@ -34,7 +34,7 @@ from diff_augment import DiffAugment
 policy = 'color,translation,cutout'
 
 
-SEED = 11
+SEED = 15
 
 # Set the random seed manually for reproducibility.
 np.random.seed(SEED)
