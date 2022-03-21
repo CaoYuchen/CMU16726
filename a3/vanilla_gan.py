@@ -169,19 +169,19 @@ def training_loop(train_dataloader, opts):
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
             # D_real_loss = torch.mean((D(real_images) - 1)**2)
-            D_real_loss = 
+            D_real_loss = 0
 
             # 2. Sample noise
-            noise = 
+            noise = 0
 
             # 3. Generate fake images from the noise
-            fake_images = 
+            fake_images = 0
 
             # 4. Compute the discriminator loss on the fake images
             # D_fake_loss = torch.mean((D(fake_images.detach())) ** 2)
-            D_fake_loss = 
+            D_fake_loss = 0
 
-            D_total_loss = 
+            D_total_loss = 0
 
             # update the discriminator D
             d_optimizer.zero_grad()
@@ -194,13 +194,13 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Sample noise
-            noise = 
+            noise = 0
 
             # 2. Generate fake images from the noise
-            fake_images = 
+            fake_images = 0
 
             # 3. Compute the generator loss
-            G_loss = 
+            G_loss = 0
 
             # update the generator G
             g_optimizer.zero_grad()
@@ -271,6 +271,9 @@ def create_parser():
     parser.add_argument('--log_step', type=int , default=10)
     parser.add_argument('--sample_every', type=int , default=200)
     parser.add_argument('--checkpoint_every', type=int , default=400)
+
+    # difference augment
+    parser.add_argument('--use_diffaug', type=bool, default=False)
 
     return parser
 
