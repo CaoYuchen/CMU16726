@@ -7,10 +7,12 @@ import os
 import PIL.Image as Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
+import matplotlib.pyplot as plt
 
 
 class CustomDataSet(Dataset):
     """Load images under folders"""
+
     def __init__(self, main_dir, ext='*.png', transform=None):
         self.main_dir = main_dir
         self.transform = transform
@@ -41,15 +43,32 @@ def get_data_loader(data_path, opts):
     if opts.data_preprocess == 'basic':
         train_transform = basic_transform
     elif opts.data_preprocess == 'deluxe':
-        # todo: add your code here: below are some ideas for your reference
-        # load_size = int(1.1 * opts.image_size)
-        # osize = [load_size, load_size]
-        # transforms.Resize(osize, Image.BICUBIC)
-        # transforms.RandomCrop(opts.image_size)
-        # transforms.RandomHorizontalFlip()
-        pass
+        load_size = int(1.1 * opts.image_size)
+        osize = [load_size, load_size]
+        deluxe_transform = transforms.Compose([
+            transforms.Resize(osize, Image.BICUBIC),
+            transforms.RandomCrop(opts.image_size),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(20),
+            transforms.RandomAutocontrast(0.2)
+        ])
+        train_transform = deluxe_transform
 
     dataset = CustomDataSet(os.path.join('data/', data_path), opts.ext, train_transform)
     dloader = DataLoader(dataset=dataset, batch_size=opts.batch_size, shuffle=True, num_workers=opts.num_workers)
 
+    # display augmented images
+    plot_image(dloader)
     return dloader
+
+
+def plot_image(dloader):
+    images, labels = iter(dloader).next()
+    length = len(images)
+    f, subplot = plt.subplots(length, 1)
+    index = 0
+    for image in images:
+        image = image.permute(1, 2, 0)
+        plt.figure()
+        subplot[index].imshow(image)
+        index += 1
