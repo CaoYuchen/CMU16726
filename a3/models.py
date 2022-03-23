@@ -60,14 +60,30 @@ class DCGenerator(nn.Module):
         ###########################################
         self.up_conv1 = nn.ConvTranspose2d(in_channels=noise_size, out_channels=conv_dim * 8, kernel_size=4, stride=1,
                                            padding=0, bias=False)
-        self.bn1 = nn.BatchNorm2d(conv_dim * 8)
-        self.up_conv2 = up_conv(in_channels=conv_dim * 8, out_channels=conv_dim * 4, kernel_size=4, scale_factor=2,
+        self.bn1 = nn.InstanceNorm2d(conv_dim * 8)
+
+        # self.up_conv2 = nn.ConvTranspose2d(in_channels=conv_dim * 8, out_channels=conv_dim * 4, kernel_size=4, stride=2,
+        #                                    padding=1, bias=False)
+        # self.bn2 = nn.InstanceNorm2d(conv_dim * 4)
+        # self.up_conv3 = nn.ConvTranspose2d(in_channels=conv_dim * 4, out_channels=conv_dim * 2, kernel_size=4, stride=2,
+        #                                    padding=1, bias=False)
+        # self.bn3 = nn.InstanceNorm2d(conv_dim * 2)
+        # self.up_conv4 = nn.ConvTranspose2d(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=4, stride=2,
+        #                                    padding=1, bias=False)
+        # self.bn4 = nn.InstanceNorm2d(conv_dim)
+        # self.up_conv5 = nn.ConvTranspose2d(in_channels=conv_dim, out_channels=3, kernel_size=4, stride=2,
+        #                                    padding=1, bias=False)
+        self.up_conv2 = up_conv(in_channels=conv_dim * 8, out_channels=conv_dim * 4, kernel_size=4, stride=2, padding=1,
+                                scale_factor=4,
                                 norm='instance')
-        self.up_conv3 = up_conv(in_channels=conv_dim * 4, out_channels=conv_dim * 2, kernel_size=4, scale_factor=2,
+        self.up_conv3 = up_conv(in_channels=conv_dim * 4, out_channels=conv_dim * 2, kernel_size=4, stride=2, padding=1,
+                                scale_factor=4,
                                 norm='instance')
-        self.up_conv4 = up_conv(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=4, scale_factor=2,
+        self.up_conv4 = up_conv(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=4, stride=2, padding=1,
+                                scale_factor=4,
                                 norm='instance')
-        self.up_conv5 = up_conv(in_channels=conv_dim, out_channels=3, kernel_size=4, scale_factor=2, norm='none')
+        self.up_conv5 = up_conv(in_channels=conv_dim, out_channels=3, kernel_size=4, stride=2, padding=1,
+                                scale_factor=4, norm='none')
 
     def forward(self, z):
         """Generates an image given a sample of random noise.
@@ -91,6 +107,13 @@ class DCGenerator(nn.Module):
         z = F.relu(self.up_conv4(z))
 
         z = F.tanh(self.up_conv5(z))
+
+        # z = F.relu(self.bn1(self.up_conv2(z)))
+        # z = F.relu(self.bn1(self.up_conv3(z)))
+        # z = F.relu(self.bn1(self.up_conv4(z)))
+        # z = F.tanh(self.up_conv5(z))
+
+        return z
 
 
 class ResnetBlock(nn.Module):
@@ -159,26 +182,27 @@ class DCDiscriminator(nn.Module):
         ###########################################
 
         self.conv1 = conv(in_channels=3, out_channels=conv_dim, kernel_size=4, norm='instance',
-                          init_zero_weights=False)
+                          init_zero_weights=True)
         self.conv2 = conv(in_channels=conv_dim, out_channels=conv_dim * 2, kernel_size=4, norm='instance',
-                          init_zero_weights=False)
+                          init_zero_weights=True)
         self.conv3 = conv(in_channels=conv_dim * 2, out_channels=conv_dim * 4, kernel_size=4, norm='instance',
-                          init_zero_weights=False)
+                          init_zero_weights=True)
         self.conv4 = conv(in_channels=conv_dim * 4, out_channels=conv_dim * 8, kernel_size=4, norm='instance',
-                          init_zero_weights=False)
+                          init_zero_weights=True)
         self.conv5 = conv(in_channels=conv_dim * 8, out_channels=1, kernel_size=4, stride=1, padding=0, norm='none',
-                          init_zero_weights=False)
+                          init_zero_weights=True)
 
     def forward(self, x):
         ###########################################
         ##   FILL THIS IN: FORWARD PASS   ##
         ###########################################
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = F.relu(self.conv4(x))
+        x = F.leaky_relu(self.conv1(x), 0.2, True)
+        x = F.leaky_relu(self.conv2(x), 0.2, True)
+        x = F.leaky_relu(self.conv3(x), 0.2, True)
+        x = F.leaky_relu(self.conv4(x), 0.2, True)
 
         x = F.sigmoid(self.conv5(x))
+        return x
 
 
 class PatchDiscriminator(nn.Module):

@@ -31,8 +31,8 @@ from data_loader import get_data_loader
 from models import DCGenerator, DCDiscriminator
 
 from diff_augment import DiffAugment
-policy = 'color,translation,cutout'
 
+policy = 'color,translation,cutout'
 
 SEED = 11
 
@@ -81,10 +81,11 @@ def create_image_grid(array, ncols=None):
     if not ncols:
         ncols = int(np.sqrt(num_images))
     nrows = int(np.math.floor(num_images / float(ncols)))
-    result = np.zeros((cell_h*nrows, cell_w*ncols, channels), dtype=array.dtype)
+    result = np.zeros((cell_h * nrows, cell_w * ncols, channels), dtype=array.dtype)
     for i in range(0, nrows):
         for j in range(0, ncols):
-            result[i*cell_h:(i+1)*cell_h, j*cell_w:(j+1)*cell_w, :] = array[i*ncols+j].transpose(1, 2, 0)
+            result[i * cell_h:(i + 1) * cell_h, j * cell_w:(j + 1) * cell_w, :] = array[i * ncols + j].transpose(1, 2,
+                                                                                                                 0)
 
     if channels == 1:
         result = result.squeeze()
@@ -169,19 +170,19 @@ def training_loop(train_dataloader, opts):
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
             # D_real_loss = torch.mean((D(real_images) - 1)**2)
-            D_real_loss = 0
+            D_real_loss = torch.mean((D(real_images) - 1)**2)
 
             # 2. Sample noise
-            noise = 0
+            noise = sample_noise(opts.noise_size)
 
             # 3. Generate fake images from the noise
-            fake_images = 0
+            fake_images = G(noise)
 
             # 4. Compute the discriminator loss on the fake images
             # D_fake_loss = torch.mean((D(fake_images.detach())) ** 2)
-            D_fake_loss = 0
+            D_fake_loss = torch.mean((D(fake_images.detach())) ** 2)
 
-            D_total_loss = 0
+            D_total_loss = (D_real_loss + D_fake_loss) / 2.0
 
             # update the discriminator D
             d_optimizer.zero_grad()
@@ -194,13 +195,13 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Sample noise
-            noise = 0
+            noise = sample_noise(opts.noise_size)
 
             # 2. Generate fake images from the noise
-            fake_images = 0
+            fake_images = G(noise)
 
             # 3. Compute the generator loss
-            G_loss = 0
+            G_loss = torch.mean((D(fake_images.detach()) - 1)**2)
 
             # update the generator G
             g_optimizer.zero_grad()
@@ -210,7 +211,7 @@ def training_loop(train_dataloader, opts):
             # Print the log info
             if iteration % opts.log_step == 0:
                 print('Iteration [{:4d}/{:4d}] | D_real_loss: {:6.4f} | D_fake_loss: {:6.4f} | G_loss: {:6.4f}'.format(
-                       iteration, total_train_iters, D_real_loss.item(), D_fake_loss.item(), G_loss.item()))
+                    iteration, total_train_iters, D_real_loss.item(), D_fake_loss.item(), G_loss.item()))
                 logger.add_scalar('D/fake', D_fake_loss, iteration)
                 logger.add_scalar('D/real', D_real_loss, iteration)
                 logger.add_scalar('D/total', D_total_loss, iteration)
@@ -261,16 +262,17 @@ def create_parser():
     parser.add_argument('--beta2', type=float, default=0.999)
 
     # Data sources
-    parser.add_argument('--data', type=str, default='cat/grumpifyBprocessed', help='The folder of the training dataset.')
+    parser.add_argument('--data', type=str, default='cat/grumpifyBprocessed',
+                        help='The folder of the training dataset.')
     parser.add_argument('--data_preprocess', type=str, default='deluxe', help='data preprocess scheme [basic|deluxe]')
     parser.add_argument('--ext', type=str, default='*.png', help='Choose the file type of images to generate.')
 
     # Directories and checkpoint/sample iterations
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints_vanilla')
     parser.add_argument('--sample_dir', type=str, default='./vanilla')
-    parser.add_argument('--log_step', type=int , default=10)
-    parser.add_argument('--sample_every', type=int , default=200)
-    parser.add_argument('--checkpoint_every', type=int , default=400)
+    parser.add_argument('--log_step', type=int, default=10)
+    parser.add_argument('--sample_every', type=int, default=200)
+    parser.add_argument('--checkpoint_every', type=int, default=400)
 
     # difference augment
     parser.add_argument('--use_diffaug', type=bool, default=False)

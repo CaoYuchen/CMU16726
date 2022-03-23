@@ -49,8 +49,10 @@ def get_data_loader(data_path, opts):
             transforms.Resize(osize, Image.BICUBIC),
             transforms.RandomCrop(opts.image_size),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(20),
-            transforms.RandomAutocontrast(0.2)
+            transforms.RandomRotation(10),
+            # transforms.RandomAutocontrast(0.2),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
         train_transform = deluxe_transform
 
@@ -58,7 +60,7 @@ def get_data_loader(data_path, opts):
     dloader = DataLoader(dataset=dataset, batch_size=opts.batch_size, shuffle=True, num_workers=opts.num_workers)
 
     # display augmented images
-    plot_image(dloader)
+    # plot_image(dloader)
     return dloader
 
 
