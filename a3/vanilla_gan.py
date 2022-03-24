@@ -14,6 +14,8 @@ import os
 import warnings
 
 import imageio
+import pandas as pd
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore")
 
@@ -26,12 +28,13 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 # Local imports
+import sys
+sys.path.append('/content/drive/MyDrive/16726/A3/')
 import utils
-from data_loader import get_data_loader
-from models import DCGenerator, DCDiscriminator
+# from data_loader import get_data_loader
+# from models import DCGenerator, DCDiscriminator
 
-from diff_augment import DiffAugment
-
+# from diff_augment import DiffAugment
 policy = 'color,translation,cutout'
 
 SEED = 11
@@ -135,6 +138,64 @@ def sample_noise(dim):
     """
     return utils.to_var(torch.rand(batch_size, dim) * 2 - 1).unsqueeze(2).unsqueeze(3)
 
+def plot_curve(G_loss_curve,D_loss_curve,iter_curve):
+    plt.style.use("dark_background")
+
+    for param in ['text.color', 'axes.labelcolor', 'xtick.color', 'ytick.color']:
+        plt.rcParams[param] = '0.9'  # very light grey
+
+    for param in ['figure.facecolor', 'axes.facecolor', 'savefig.facecolor']:
+        plt.rcParams[param] = '#212946'  # bluish dark grey
+
+    colors = [
+        '#08F7FE',  # teal/cyan
+        '#FE53BB',  # pink
+        '#F5D300',  # yellow
+        '#00ff41',  # matrix green
+    ]
+
+
+    df = pd.DataFrame({'G_loss': G_loss_curve,
+                    'D_loss': D_loss_curve,
+                    'iteration': iter_curve})
+
+    fig, ax = plt.subplots()
+
+    df.plot(x= "iteration", y={'G_loss','D_loss'},marker='o', color=colors, ax=ax)
+
+    # Redraw the data with low alpha and slighty increased linewidth:
+    n_shades = 10
+    diff_linewidth = 1.05
+    alpha_value = 0.3 / n_shades
+
+    for n in range(1, n_shades+1):
+
+        df.plot(x= "iteration", y={'G_loss','D_loss'},
+                marker='o',
+                linewidth=2+(diff_linewidth*n),
+                alpha=alpha_value,
+                legend=False,
+                ax=ax,
+                color=colors)
+
+    # Color the areas below the lines:
+    # for column, color in zip(df, colors):
+    #     if "iteration" not in column:
+    #         ax.fill_between(x=df.index,
+    #                         y1=df[column].values,
+    #                         y2=[0] * len(df),
+    #                         color=color,
+    #                         alpha=0.1)
+
+    ax.grid(color='#2A3459')
+
+    ax.set_xlim([ax.get_xlim()[0] - 0.2, ax.get_xlim()[1] + 0.2])  # to not have the markers cut off
+    ax.set_ylim(0)
+
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.title("Loss of Discriminator and Generator")
+    plt.show()
 
 def training_loop(train_dataloader, opts):
     """Runs the training loop.
@@ -154,6 +215,10 @@ def training_loop(train_dataloader, opts):
 
     iteration = 1
 
+    D_loss_curve = []
+    G_loss_curve = []
+    iter_curve = []
+
     total_train_iters = opts.num_epochs * len(train_dataloader)
 
     for epoch in range(opts.num_epochs):
@@ -169,7 +234,8 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
-            # D_real_loss = torch.mean((D(real_images) - 1)**2)
+            if opts.use_diffaug:
+                real_images = DiffAugment(real_images, policy=policy)
             D_real_loss = torch.mean((D(real_images) - 1)**2)
 
             # 2. Sample noise
@@ -177,9 +243,9 @@ def training_loop(train_dataloader, opts):
 
             # 3. Generate fake images from the noise
             fake_images = G(noise)
-
             # 4. Compute the discriminator loss on the fake images
-            # D_fake_loss = torch.mean((D(fake_images.detach())) ** 2)
+            if opts.use_diffaug:
+                fake_images = DiffAugment(fake_images, policy=policy)
             D_fake_loss = torch.mean((D(fake_images.detach())) ** 2)
 
             D_total_loss = (D_real_loss + D_fake_loss) / 2.0
@@ -201,7 +267,9 @@ def training_loop(train_dataloader, opts):
             fake_images = G(noise)
 
             # 3. Compute the generator loss
-            G_loss = torch.mean((D(fake_images.detach()) - 1)**2)
+            if opts.use_diffaug:
+                fake_images = DiffAugment(fake_images, policy=policy)
+            G_loss = torch.mean((D(fake_images) - 1)**2)
 
             # update the generator G
             g_optimizer.zero_grad()
@@ -226,7 +294,17 @@ def training_loop(train_dataloader, opts):
             if iteration % opts.checkpoint_every == 0:
                 checkpoint(iteration, G, D, opts)
 
+            # Draw loss curve
+            if iteration % opts.log_step == 0:
+                D_loss_curve.append(D_total_loss.item())
+                G_loss_curve.append(G_loss.item())
+                iter_curve.append(iteration)
+
             iteration += 1
+
+    #  Plot curve
+    plot_curve(G_loss_curve,D_loss_curve,iter_curve)
+
 
 
 def main(opts):
@@ -282,8 +360,7 @@ def create_parser():
 
 if __name__ == '__main__':
     parser = create_parser()
-    opts = parser.parse_args()
-
+    opts = parser.parse_args(args=[])
     batch_size = opts.batch_size
     opts.sample_dir = os.path.join('output/', opts.sample_dir,
                                    '%s_%s' % (os.path.basename(opts.data), opts.data_preprocess))

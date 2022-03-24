@@ -36,11 +36,13 @@ import torch.optim as optim
 import numpy as np
 
 # Local imports
+import sys
+sys.path.append('/content/drive/MyDrive/16726/A3/')
 import utils
-from data_loader import get_data_loader
-from models import CycleGenerator, DCDiscriminator, PatchDiscriminator
+# from data_loader import get_data_loader
+# from models import CycleGenerator, DCDiscriminator, PatchDiscriminator
 
-from diff_augment import DiffAugment
+# from diff_augment import DiffAugment
 policy = 'color,translation,cutout' # If your dataset is as small as ours (e.g.,
 
 SEED = 11
@@ -89,7 +91,7 @@ def create_model(opts):
     print_models(G_XtoY, G_YtoX, D_X, D_Y)
 
     # TODO: B&W add your own initialization here
-    # 
+    #
 
     if torch.cuda.is_available():
         G_XtoY.cuda()
@@ -129,6 +131,66 @@ def merge_images(sources, targets, opts, k=10):
         merged[:, i*h:(i+1)*h, (j*2)*h:(j*2+1)*h] = s
         merged[:, i*h:(i+1)*h, (j*2+1)*h:(j*2+2)*h] = t
     return merged.transpose(1, 2, 0)
+
+
+def plot_curve(G_loss_curve,D_loss_curve,iter_curve):
+    plt.style.use("dark_background")
+
+    for param in ['text.color', 'axes.labelcolor', 'xtick.color', 'ytick.color']:
+        plt.rcParams[param] = '0.9'  # very light grey
+
+    for param in ['figure.facecolor', 'axes.facecolor', 'savefig.facecolor']:
+        plt.rcParams[param] = '#212946'  # bluish dark grey
+
+    colors = [
+        '#08F7FE',  # teal/cyan
+        '#FE53BB',  # pink
+        '#F5D300',  # yellow
+        '#00ff41',  # matrix green
+    ]
+
+
+    df = pd.DataFrame({'G_loss': G_loss_curve,
+                    'D_loss': D_loss_curve,
+                    'iteration': iter_curve})
+
+    fig, ax = plt.subplots()
+
+    df.plot(x= "iteration", y={'G_loss','D_loss'},marker='o', color=colors, ax=ax)
+
+    # Redraw the data with low alpha and slighty increased linewidth:
+    n_shades = 10
+    diff_linewidth = 1.05
+    alpha_value = 0.3 / n_shades
+
+    for n in range(1, n_shades+1):
+
+        df.plot(x= "iteration", y={'G_loss','D_loss'},
+                marker='o',
+                linewidth=2+(diff_linewidth*n),
+                alpha=alpha_value,
+                legend=False,
+                ax=ax,
+                color=colors)
+
+    # Color the areas below the lines:
+    # for column, color in zip(df, colors):
+    #     if "iteration" not in column:
+    #         ax.fill_between(x=df.index,
+    #                         y1=df[column].values,
+    #                         y2=[0] * len(df),
+    #                         color=color,
+    #                         alpha=0.1)
+
+    ax.grid(color='#2A3459')
+
+    ax.set_xlim([ax.get_xlim()[0] - 0.2, ax.get_xlim()[1] + 0.2])  # to not have the markers cut off
+    ax.set_ylim(0)
+
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.title("Loss of Discriminator and Generator")
+    plt.show()
 
 
 def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
@@ -176,6 +238,10 @@ def training_loop(dataloader_X, dataloader_Y, opts):
     fixed_X = utils.to_var(iter_X.next()[0])
     fixed_Y = utils.to_var(iter_Y.next()[0])
 
+    D_loss_curve=[]
+    G_loss_curve=[]
+    iter_curve=[]
+
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
     for iteration in range(1, opts.train_iters+1):
@@ -201,22 +267,26 @@ def training_loop(dataloader_X, dataloader_Y, opts):
         #########################################
 
         # 1. Compute the discriminator losses on real images
-        D_X_loss = 
-        D_Y_loss = 
+        D_X_loss = torch.mean((D_X(images_X)-1)**2)
+        D_Y_loss = torch.mean((D_Y(images_Y)-1)**2)
 
         d_real_loss = D_X_loss + D_Y_loss
 
         # 2. Generate fake images that look like domain X based on real images in domain Y
-        fake_X = 
+        fake_X = G_YtoX(images_Y)
 
         # 3. Compute the loss for D_X
-        D_X_loss = 
+        if opts.use_diffaug:
+                fake_X = DiffAugment(fake_X, policy=policy)
+        D_X_loss = torch.mean(D_X(fake_X.detach())**2)
 
         # 4. Generate fake images that look like domain Y based on real images in domain X
-        fake_Y = 
+        fake_Y = G_XtoY(images_X)
 
         # 5. Compute the loss for D_Y
-        D_Y_loss = 
+        if opts.use_diffaug:
+                fake_Y = DiffAugment(fake_Y, policy=policy)
+        D_Y_loss = torch.mean(D_Y(fake_Y.detach())**2)
 
         d_fake_loss = D_X_loss + D_Y_loss
 
@@ -243,15 +313,17 @@ def training_loop(dataloader_X, dataloader_Y, opts):
         #########################################
 
         # 1. Generate fake images that look like domain X based on real images in domain Y
-        fake_X = 
+        fake_X = G_YtoX(images_Y)
 
         # 2. Compute the generator loss based on domain X
-        g_loss = 
+        if opts.use_diffaug:
+                fake_X = DiffAugment(fake_X, policy=policy)
+        g_loss = torch.mean((D_X(fake_X)-1)**2)
         logger.add_scalar('G/XY/fake', g_loss, iteration)
 
         if opts.use_cycle_consistency_loss:
             # 3. Compute the cycle consistency loss (the reconstruction loss)
-            cycle_consistency_loss = 
+            cycle_consistency_loss = torch.mean(torch.linalg.norm(images_Y - G_XtoY((G_YtoX(images_Y))),dim=1,ord=1))
 
             g_loss += opts.lambda_cycle * cycle_consistency_loss
             logger.add_scalar('G/XY/cycle', opts.lambda_cycle * cycle_consistency_loss, iteration)
@@ -261,15 +333,17 @@ def training_loop(dataloader_X, dataloader_Y, opts):
         #########################################
 
         # 1. Generate fake images that look like domain Y based on real images in domain X
-        fake_Y = 
+        fake_Y = G_XtoY(images_X)
 
         # 2. Compute the generator loss based on domain Y
-        g_loss += 
+        if opts.use_diffaug:
+                fake_Y = DiffAugment(fake_Y, policy=policy)
+        g_loss += torch.mean((D_Y(fake_Y)-1)**2)
         logger.add_scalar('G/YX/fake', g_loss, iteration)
 
         if opts.use_cycle_consistency_loss:
             # 3. Compute the cycle consistency loss (the reconstruction loss)
-            cycle_consistency_loss = 
+            cycle_consistency_loss = torch.mean(torch.linalg.norm(images_X - G_YtoX((G_XtoY(images_X))),dim=1,ord=1))
 
             g_loss += opts.lambda_cycle * cycle_consistency_loss
             logger.add_scalar('G/YX/cycle', cycle_consistency_loss, iteration)
@@ -294,6 +368,14 @@ def training_loop(dataloader_X, dataloader_Y, opts):
         if iteration % opts.checkpoint_every == 0:
             checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, opts)
 
+        # Draw loss curve
+        if iteration % opts.log_step == 0:
+            D_loss_curve.append(d_total_loss.item())
+            G_loss_curve.append(g_loss.item())
+            iter_curve.append(iteration)
+
+    #  Plot curve
+    plot_curve(G_loss_curve,D_loss_curve,iter_curve)
 
 def main(opts):
     """Loads the data, creates checkpoint and sample directories, and starts the training loop.
@@ -330,12 +412,12 @@ def create_parser():
 
     # Model hyper-parameters
     parser.add_argument('--image_size', type=int, default=64, help='The side length N to convert images to NxN.')
-    parser.add_argument('--disc', type=str, default='dc', help='Choose which discriminator to use. choices:[dc|patch]')
+    parser.add_argument('--disc', type=str, default='patch', help='Choose which discriminator to use. choices:[dc|patch]')
     parser.add_argument('--gen', type=str, default='cycle')
     parser.add_argument('--g_conv_dim', type=int, default=32)
     parser.add_argument('--d_conv_dim', type=int, default=32)
     parser.add_argument('--norm', type=str, default='instance')
-    parser.add_argument('--use_cycle_consistency_loss', action='store_true', default=False, help='Choose whether to include the cycle consistency term in the loss.')
+    parser.add_argument('--use_cycle_consistency_loss', action='store_true', default=True, help='Choose whether to include the cycle consistency term in the loss.')
     parser.add_argument('--init_zero_weights', action='store_true', default=False, help='Choose whether to initialize the generator conv weights to 0 (implements the identity function).')
     parser.add_argument('--init_type', type=str, default='naive')
 
@@ -363,12 +445,15 @@ def create_parser():
 
     parser.add_argument('--gpu', type=str, default='0')
 
+    # difference augment
+    parser.add_argument('--use_diffaug', type=bool, default=True)
+
     return parser
 
 
 if __name__ == '__main__':
     parser = create_parser()
-    opts = parser.parse_args()
+    opts = parser.parse_args(args=[])
     os.environ['CUDA_VISIBLE_DEVICES'] = opts.gpu
     opts.sample_dir = os.path.join('output/', opts.sample_dir,
                                    '%s_%g' % (opts.X.split('/')[0], opts.lambda_cycle))

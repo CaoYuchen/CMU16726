@@ -19,7 +19,6 @@ import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 
-
 def up_conv(in_channels, out_channels, kernel_size=4, stride=1, padding=1, scale_factor=2, norm='instance'):
     """Creates a transposed-convolutional layer, with optional batch normalization.
     """
@@ -62,28 +61,17 @@ class DCGenerator(nn.Module):
                                            padding=0, bias=False)
         self.bn1 = nn.InstanceNorm2d(conv_dim * 8)
 
-        # self.up_conv2 = nn.ConvTranspose2d(in_channels=conv_dim * 8, out_channels=conv_dim * 4, kernel_size=4, stride=2,
-        #                                    padding=1, bias=False)
-        # self.bn2 = nn.InstanceNorm2d(conv_dim * 4)
-        # self.up_conv3 = nn.ConvTranspose2d(in_channels=conv_dim * 4, out_channels=conv_dim * 2, kernel_size=4, stride=2,
-        #                                    padding=1, bias=False)
-        # self.bn3 = nn.InstanceNorm2d(conv_dim * 2)
-        # self.up_conv4 = nn.ConvTranspose2d(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=4, stride=2,
-        #                                    padding=1, bias=False)
-        # self.bn4 = nn.InstanceNorm2d(conv_dim)
-        # self.up_conv5 = nn.ConvTranspose2d(in_channels=conv_dim, out_channels=3, kernel_size=4, stride=2,
-        #                                    padding=1, bias=False)
-        self.up_conv2 = up_conv(in_channels=conv_dim * 8, out_channels=conv_dim * 4, kernel_size=4, stride=2, padding=1,
-                                scale_factor=4,
+        self.up_conv2 = up_conv(in_channels=conv_dim * 8, out_channels=conv_dim * 4, kernel_size=3, stride=1, padding=1,
+                                scale_factor=2,
                                 norm='instance')
-        self.up_conv3 = up_conv(in_channels=conv_dim * 4, out_channels=conv_dim * 2, kernel_size=4, stride=2, padding=1,
-                                scale_factor=4,
+        self.up_conv3 = up_conv(in_channels=conv_dim * 4, out_channels=conv_dim * 2, kernel_size=3, stride=1, padding=1,
+                                scale_factor=2,
                                 norm='instance')
-        self.up_conv4 = up_conv(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=4, stride=2, padding=1,
-                                scale_factor=4,
+        self.up_conv4 = up_conv(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=3, stride=1, padding=1,
+                                scale_factor=2,
                                 norm='instance')
-        self.up_conv5 = up_conv(in_channels=conv_dim, out_channels=3, kernel_size=4, stride=2, padding=1,
-                                scale_factor=4, norm='none')
+        self.up_conv5 = up_conv(in_channels=conv_dim, out_channels=3, kernel_size=3, stride=1, padding=1,
+                                scale_factor=2, norm='none')
 
     def forward(self, z):
         """Generates an image given a sample of random noise.
@@ -107,11 +95,6 @@ class DCGenerator(nn.Module):
         z = F.relu(self.up_conv4(z))
 
         z = F.tanh(self.up_conv5(z))
-
-        # z = F.relu(self.bn1(self.up_conv2(z)))
-        # z = F.relu(self.bn1(self.up_conv3(z)))
-        # z = F.relu(self.bn1(self.up_conv4(z)))
-        # z = F.tanh(self.up_conv5(z))
 
         return z
 
@@ -140,15 +123,23 @@ class CycleGenerator(nn.Module):
         ###########################################
 
         # 1. Define the encoder part of the generator (that extracts features from the input image)
-        self.conv1 = 0
-        self.conv2 = 0
+        self.conv1 = conv(in_channels=3, out_channels=conv_dim, kernel_size=4, norm='instance',
+                          init_zero_weights=False)
+        self.conv2 = conv(in_channels=conv_dim, out_channels=conv_dim*2, kernel_size=4, norm='instance',
+                          init_zero_weights=False)
 
         # 2. Define the transformation part of the generator
-        self.resnet_block = 0
+        self.resnet_block1 = ResnetBlock(conv_dim = conv_dim*2, norm='instance')
+        self.resnet_block2 = ResnetBlock(conv_dim = conv_dim*2, norm='instance')
+        self.resnet_block3 = ResnetBlock(conv_dim = conv_dim*2, norm='instance')
 
         # 3. Define the decoder part of the generator (that builds up the output image from features)
-        self.up_conv1 = 0
-        self.up_conv2 = 0
+        self.up_conv1 = up_conv(in_channels=conv_dim * 2, out_channels=conv_dim, kernel_size=3, stride=1, padding=1,
+                                scale_factor=2,
+                                norm='instance')
+        self.up_conv2 = up_conv(in_channels=conv_dim, out_channels=3, kernel_size=3, stride=1, padding=1,
+                                scale_factor=2, norm='none')
+
 
     def forward(self, x):
         """Generates an image conditioned on an input image.
@@ -166,7 +157,16 @@ class CycleGenerator(nn.Module):
         ##   FILL THIS IN: FORWARD PASS   ##
         ###########################################
 
-        pass
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+
+        x = F.relu(self.resnet_block1(x))
+        x = F.relu(self.resnet_block2(x))
+        x = F.relu(self.resnet_block3(x))
+
+        x = F.relu(self.up_conv1(x))
+        x = F.tanh(self.up_conv2(x))
+        return x
 
 
 class DCDiscriminator(nn.Module):
@@ -182,24 +182,24 @@ class DCDiscriminator(nn.Module):
         ###########################################
 
         self.conv1 = conv(in_channels=3, out_channels=conv_dim, kernel_size=4, norm='instance',
-                          init_zero_weights=True)
+                          init_zero_weights=False)
         self.conv2 = conv(in_channels=conv_dim, out_channels=conv_dim * 2, kernel_size=4, norm='instance',
-                          init_zero_weights=True)
+                          init_zero_weights=False)
         self.conv3 = conv(in_channels=conv_dim * 2, out_channels=conv_dim * 4, kernel_size=4, norm='instance',
-                          init_zero_weights=True)
+                          init_zero_weights=False)
         self.conv4 = conv(in_channels=conv_dim * 4, out_channels=conv_dim * 8, kernel_size=4, norm='instance',
-                          init_zero_weights=True)
+                          init_zero_weights=False)
         self.conv5 = conv(in_channels=conv_dim * 8, out_channels=1, kernel_size=4, stride=1, padding=0, norm='none',
-                          init_zero_weights=True)
+                          init_zero_weights=False)
 
     def forward(self, x):
         ###########################################
         ##   FILL THIS IN: FORWARD PASS   ##
         ###########################################
-        x = F.leaky_relu(self.conv1(x), 0.2, True)
-        x = F.leaky_relu(self.conv2(x), 0.2, True)
-        x = F.leaky_relu(self.conv3(x), 0.2, True)
-        x = F.leaky_relu(self.conv4(x), 0.2, True)
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
 
         x = F.sigmoid(self.conv5(x))
         return x
@@ -219,9 +219,22 @@ class PatchDiscriminator(nn.Module):
 
         # Hint: it should look really similar to DCDiscriminator.
 
+        self.conv1 = conv(in_channels=3, out_channels=conv_dim, kernel_size=4, norm='instance',
+                          init_zero_weights=False)
+        self.conv2 = conv(in_channels=conv_dim, out_channels=conv_dim * 2, kernel_size=4, norm='instance',
+                          init_zero_weights=False)
+        self.conv3 = conv(in_channels=conv_dim * 2, out_channels=conv_dim * 4, kernel_size=4, norm='instance',
+                          init_zero_weights=False)
+        self.conv4 = conv(in_channels=conv_dim * 4, out_channels=1, kernel_size=4, norm='none',
+                          init_zero_weights=False)
+
     def forward(self, x):
         ###########################################
         ##   FILL THIS IN: FORWARD PASS   ##
         ###########################################
 
-        pass
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = self.conv4(x)
+        return x
