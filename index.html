@@ -439,6 +439,23 @@ Webiste: 16726 course website
                                 <img src="./media/a3/discriminator.png" height="300px">
                             </div>
                         </div>
+                        <p class="col-xs-12 mr-4">
+                            According to the formula <b>(N-F+2P)/S + 1 = M</b>(We don't consider dilation here), where <b>N</b> is the input number of channels, <b>M</b> is the output number of channels, <b>S</b> is stride, <b>P</b> is padding, <b>F</b> is size of filter/kernel, since we want <b>N=2M</b>, and we use filter size of 4, stride of 2, we can calculate that padding <b>P</b> is 1.
+                            Besides, I use softmax for the output layer, and later on squared mean difference for loss function, since this Discriminator is a classification problem, the softmax-loss combination is a generally good choice.
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>The Generator</b></p>
+                        <p class="col-xs-12 mr-4">
+                            The generator in this DCGAN is a convolutional neural network with the following architecture:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/generator.png" height="450px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            In the generator neural network, I use transposed convolution with a filter, size of 4, stride of 1 and padding of 0 for the very first layer that from 100x1x1 input to 256x4x4 output. And the rest layer all are upsampling of 2, with a filter, size of 3, stride of 1 and padding of 1 to satisfy the condition that output dimension is the 2 times of input dimension. And the reason why the first layer is a transposed convolution is that it has better performance than direct upsampling for noise. 
+                        </p>
                         <hr class="col-xs-12 mr-4">
                     </div>
                 </div>
