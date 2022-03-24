@@ -1,6 +1,8 @@
 *.sh
 data/
 checkpoints*/
+high_res_images/
+100-shot-obama
 output
 __pycache__
 .DS_Store
