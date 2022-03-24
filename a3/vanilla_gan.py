@@ -28,13 +28,13 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 # Local imports
-import sys
-sys.path.append('/content/drive/MyDrive/16726/A3/')
+# import sys
+# sys.path.append('/content/drive/MyDrive/16726/A3/')
 import utils
-# from data_loader import get_data_loader
-# from models import DCGenerator, DCDiscriminator
+from data_loader import get_data_loader
+from models import DCGenerator, DCDiscriminator
 
-# from diff_augment import DiffAugment
+from diff_augment import DiffAugment
 policy = 'color,translation,cutout'
 
 SEED = 11
@@ -360,7 +360,7 @@ def create_parser():
 
 if __name__ == '__main__':
     parser = create_parser()
-    opts = parser.parse_args(args=[])
+    opts = parser.parse_args()
     batch_size = opts.batch_size
     opts.sample_dir = os.path.join('output/', opts.sample_dir,
                                    '%s_%s' % (os.path.basename(opts.data), opts.data_preprocess))

@@ -26,6 +26,9 @@ import warnings
 import imageio
 from torch.utils.tensorboard import SummaryWriter
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 warnings.filterwarnings("ignore")
 
 # Torch imports
@@ -36,13 +39,13 @@ import torch.optim as optim
 import numpy as np
 
 # Local imports
-import sys
-sys.path.append('/content/drive/MyDrive/16726/A3/')
+# import sys
+# sys.path.append('/content/drive/MyDrive/16726/A3/')
 import utils
-# from data_loader import get_data_loader
-# from models import CycleGenerator, DCDiscriminator, PatchDiscriminator
+from data_loader import get_data_loader
+from models import CycleGenerator, DCDiscriminator, PatchDiscriminator
 
-# from diff_augment import DiffAugment
+from diff_augment import DiffAugment
 policy = 'color,translation,cutout' # If your dataset is as small as ours (e.g.,
 
 SEED = 11
@@ -453,7 +456,7 @@ def create_parser():
 
 if __name__ == '__main__':
     parser = create_parser()
-    opts = parser.parse_args(args=[])
+    opts = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = opts.gpu
     opts.sample_dir = os.path.join('output/', opts.sample_dir,
                                    '%s_%g' % (opts.X.split('/')[0], opts.lambda_cycle))
