@@ -419,14 +419,14 @@ Webiste: 16726 course website
 
                         <p class="col-xs-12 mr-4"><b>Implement Data Augmentation</b></p>
                         <p class="col-xs-12 mr-4">
-                            In Pytorch, data augmentation is invoked each time when iterated through the mini-batch, the purpose of the data augmentation is add variance to the dataset, which is especially useful when the dataset is small or each sample of the data are too similar. I mainly use the Resize + RandomCrop, RandomHorizontalFlip, RandomRotation(10 angles) to generate augmentation. The example of orignal dataset and augmented dataset, and GAN generated sample by different dataset can be see here:
+                            In Pytorch, data augmentation is invoked each time when iterated through the mini-batch, the purpose of the data augmentation is add variance to the dataset, which is especially useful when the dataset is small or each sample of the data are too similar. For example, in this DCGAN training, we only have 204 images as dataset. I mainly use the Resize + RandomCrop, RandomHorizontalFlip, RandomRotation(10 angles) to generate augmentation. The example of orignal dataset and augmented dataset, and GAN generated sample by different dataset can be see here:
                         </p>
                         <div class="row mr-2">
                             <div class="text-center col-12">
-                                <img src="./media/a2/house.jpg" height="150px">
-                                <img src="./media/a2/house_mask.png" height="150px">
-                                <img src="./media/a2/mountain.jpg" height="350px">
-                                <img src="./media/a2/ballon_blend.png" height="600px">
+                                <img src="./media/a3/real-basic.png" height="300px">
+                                <img src="./media/a3/real-basic_diff.png" height="300px">
+                                <img src="./media/a3/real-deluxe.png" height="300px">
+                                <img src="./media/a3/real-deluxe-diff.png" height="300px">
                             </div>
                         </div>
                         
@@ -456,7 +456,180 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             In the generator neural network, I use transposed convolution with a filter, size of 4, stride of 1 and padding of 0 for the very first layer that from 100x1x1 input to 256x4x4 output. And the rest layer all are upsampling of 2, with a filter, size of 3, stride of 1 and padding of 1 to satisfy the condition that output dimension is the 2 times of input dimension. And the reason why the first layer is a transposed convolution is that it has better performance than direct upsampling for noise. 
                         </p>
+
+                        <p class="col-xs-12 mr-4"><b>The Training Loop</b></p>
+                        <p class="col-xs-12 mr-4">
+                            The training loop including loss function and backpropagation is as straight forward as image below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/gan_algo.png" height="450px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            One thing to notice is that we normally first do the back propagation to update the gradients and weights of discriminator, then do the generator, this is because the loss function first goes back to discriminator then to the generator. To better train generator's weight, we prefer the gradient and weights of discriminator is static than dynamic. 
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            Similarly, when training the discriminator, we don't want to update the gradient all the way back to generator, therefore we have to set no_grad_up for the fake_image that is generated from generator and fed to discriminator. In my case, I use torch.detach() function.
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>The Differentiable Augmentation</b></p>
+                        <p class="col-xs-12 mr-4">
+                            The Differentiable Augmentation method is meant to process data during the training process, it can slow down the training but can significantly improve the output's performance. And it's shown as below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/method.jpg" height="100px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            I apply differentiable augmentation to all the generator generated fake images and real images during the training process.
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>Results</b></p>
+                        <p class="col-xs-12 mr-4">
+                            After the training with learning rate = 0.0002, beta1 = 0.5, beta2 = 0.999, epoch = 500, batch_size = 16, I get the results as below. From left to right, they are generated image with basic data augmentation, with basic and differentiable data augmentation, with deluxe data augmentation, and with deluxe and differentiable data augmentation.
+                        </p>
+
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/basic.png" height="300px">
+                                <img src="./media/a3/basic_diff.png" height="300px">
+                                <img src="./media/a3/deluxe.png" height="300px">
+                                <img src="./media/a3/deluxe_diff.png" height="300px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            The result is interesting. It's obvious the basic method has a clumzy, hard to tell cat generation. And the differentiable method clearly has some color intensity and white balance shift, it actually proves the ability of this method to increase the robustness towards the RGB color intensity, and generate a more general color tone results, also it has a better recognition in the shape of cat. The deluxe result has a better detail than the differential method. And finally, the mix of deluxe and differential method is hard to tell if it's better than a single method, because some of the generation has both good detail and color tone but some are more blur or distorted, but if we only want one best result from a group of samples, this mix method definitely works better than either of the single method.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            Similarly to the order above, I also draw the loss curve along with every 200 iteration as below:
+                        </p>
+
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/loss_basic.png" height="250px">
+                                <img src="./media/a3/loss_basic_diff.png" height="250px">
+                                <img src="./media/a3/loss_deluxe.png" height="250px">
+                                <img src="./media/a3/loss_deluxe_diff.png" height="250px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            From the loss curve, we can tell that the base and deluxe both have the trend to overfitting after the training, though dexule has a relatively better loss(where G and D both are close to 0.5), and with the help of differentiable augmentation, the loss is more close to the ideal value, which means the network has a better robust performance on general data.
+                        </p>
                         <hr class="col-xs-12 mr-4">
+
+                        <h3>Part II: CycleGAN</h3>
+                        <p class="col-xs-12 mr-4"><b>The Dual Generator</b></p>
+                        <p class="col-xs-12 mr-4">
+                            The generator of CycleGAN is a convolutional neural network with the following architecture:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/cyclegan_generator.png" height="450px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            In the generator neural network, there are two generator for X->Y and Y->X, they are symmetric in input and output, and their architecture are identical in this project. The filter size is the same as in DCGAN, refer to them in convolution and upconvolution layer respectively. And one major difference is the ResnetBlock, which is used 3 times here, which aims to make sure characteristics of the output image (e.g., the shapes of objects) do not differ too much from the input. One major difference of this generator from the one of DCGAN is that its input is not noise anymore but an image.
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>The PatchDiscriminator</b></p>
+                        <p class="col-xs-12 mr-4">
+                            A major difference of this PatchDiscriminator from the Discriminator of DCGAN is that its output is a 4x4 patch instead of a loss value, which means the output layer doesn't require a softmax function anymore, and the rest are pretty much the same.
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>The Training Loop</b></p>
+                        <p class="col-xs-12 mr-4">
+                            The training loop including loss function and backpropagation is as straight forward as image below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/cyclegan_algo.png" height="550px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            The major loss function and pipeline are similar to DCGAN, except for that for generator, since we have two generators, and we want to train them at the same time, so we add both X->Y and Y->X loss here; And for the discriminator, it goes the same way to train the loss from fake images generated from X->Y and Y->X.
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>The Cycle Consistency</b></p>
+                        <p class="col-xs-12 mr-4">
+                            The cycle consistency is like the soul part of the CycleGAN from my own experience of experiment, it aims to 
+                        </p>
+
+                        <p class="col-xs-12 mr-4"><b>The CycleGAN Experiments</b></p>
+                        <p class="col-xs-12 mr-4">
+                            My training for CycleGAN follows the learning rate = 0.0002, beta1 = 0.5, beta2 = 0.999, batch_size = 16 same as DCGAN, and I always use the Differentiable Augmentation since it helps increase robustness towards the RGB intensity and other factors. I first start by testing the CycleGAN with epoch = 1000, with and without cycle consistency, and the results are(Left side are without cycle, right side are with cycle; up side are X->Y, down side are Y->X): 
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/sample-001000-X-Y.png" height="350px">
+                                <img src="./media/a3/sample-cycle-001000-X-Y.png" height="350px">
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/sample-001000-Y-X.png" height="350px">
+                                <img src="./media/a3/sample-cycle-001000-Y-X.png" height="350px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            It's clearly that 1000 epoch is not enough to get a good output, but from the basic shape of it, and the loss function below, we can tell that the general direction is good to extend the epoch.(Left without cycle, right with cyckle) And we can tell that the cycle consistency has a slightly better output.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/loss_10000_cat_nocycle.png" height="350px">
+                                <img src="./media/a3/loss_10000_cat_allon.png" height="350px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            Next I extend the epoch to 10000, and train the CycleGAN with two datasets, also I made comparison that with and without cycle consistency, patchDiscriminator and DCDiscriminator. The result are listed below:(Left is patch+cycle, middle is patch no cycle, right is dc+cycle)
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/cycle-sample-010000-X-Y.png" height="200px">
+                                <img src="./media/a3/nocycle-sample-010000-X-Y.png" height="200px">
+                                <img src="./media/a3/dc-cycle-sample-010000-X-Y.png" height="200px">
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/cycle-sample-010000-Y-X.png" height="200px">
+                                <img src="./media/a3/nocycle-sample-010000-Y-X.png" height="200px">
+                                <img src="./media/a3/dc-cycle-sample-010000-Y-X.png" height="200px">
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/fruit-cycle-sample-010000-X-Y.png" height="200px">
+                                <img src="./media/a3/fruit-nocycle-sample-010000-X-Y.png" height="200px">
+                                <img src="./media/a3/fruit-dc-sample-010000-X-Y.png" height="200px">
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/fruit-cycle-sample-010000-Y-X.png" height="200px">
+                                <img src="./media/a3/fruit-nocycle-sample-010000-Y-X.png" height="200px">
+                                <img src="./media/a3/fruit-dc-sample-010000-Y-X.png" height="200px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            By observing the results above, we can see that without cycle consistency(middle column), the generated results have weird color, unclear shape. And for the DCDiscriminator(right column) and PatchDiscriminator(left column), they both achieve a relatively good result that generated fake image assembles the real image a lot. And they both have this color re-mapping effect, by comparison, I think the PatchDiscriminator has a slightly stronger color shift in all interested regions. It means that PatchDiscriminator can perform better pattern rematch effect.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Bonus</h3>
+                        <p class="col-xs-12 mr-4"><b>Extra dataset</b></p>
+                        <p class="col-xs-12 mr-4">
+                            I choose one dataset from <a href="https://data-efficient-gans.mit.edu/datasets/">https://data-efficient-gans.mit.edu/datasets/</a> to apply to DCGAN, the output is like:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a3/obama-dc.png" height="400px">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -494,7 +667,7 @@ Webiste: 16726 course website
 
 </html>
 <!-- cloud effect -->
-<!-- <script>
+<script>
 VANTA.CLOUDS2({
     el: "#cloud",
     mouseControls: true,
@@ -508,4 +681,4 @@ VANTA.CLOUDS2({
     speed: 1.50,
     texturePath: "./media/noise.png"
 })
-</script> -->
+</script>
