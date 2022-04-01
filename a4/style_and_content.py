@@ -39,13 +39,11 @@ class ContentLoss(nn.Module):
         # you need to `detach' the target content from the graph used to
         # compute the gradient in the forward pass that made it so that we don't track
         # those gradients anymore
-        # self.target = TODO
-        raise NotImplementedError()
+        self.target = target.detach()
 
     def forward(self, input):
         # this needs to be a passthrough where you save the appropriate loss value
-        # self.loss = TODO
-        raise NotImplementedError()
+        self.loss = F.mse_loss(input,self.target)
         return input
 
 
