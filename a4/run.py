@@ -6,6 +6,7 @@ import copy
 import sys
 from utils import load_image, Normalization, device, imshow, get_image_optimizer
 from style_and_content import ContentLoss, StyleLoss
+import argparse
 
 
 """A ``Sequential`` module contains an ordered list of child modules. For
@@ -42,10 +43,49 @@ def get_model_and_losses(cnn, style_img, content_img,
     # trim off the layers after the last content and style losses
     # as they are vestigial
 
-    # normalization = TODO
-    # model = nn.Sequential(normalization)
+    normalization = Normalization().to(device)
+    model = nn.Sequential(normalization)
 
-    raise NotImplementedError()
+    i = 0  # increment every time we see a conv
+    for layer in cnn.children():
+        if isinstance(layer, nn.Conv2d):
+            i += 1
+            name = 'conv_{}'.format(i)
+        elif isinstance(layer, nn.ReLU):
+            name = 'relu_{}'.format(i)
+            # The in-place version doesn't play very nicely with the ContentLoss
+            # and StyleLoss we insert below. So we replace with out-of-place
+            # ones here.
+            layer = nn.ReLU(inplace=False)
+        elif isinstance(layer, nn.MaxPool2d):
+            name = 'pool_{}'.format(i)
+        elif isinstance(layer, nn.BatchNorm2d):
+            name = 'bn_{}'.format(i)
+        else:
+            raise RuntimeError('Unrecognized layer: {}'.format(layer.__class__.__name__))
+
+        model.add_module(name, layer)
+
+        if name in content_layers:
+            # add content loss:
+            target = model(content_img).detach()
+            content_loss = ContentLoss(target)
+            model.add_module("content_loss_{}".format(i), content_loss)
+            content_losses.append(content_loss)
+
+        if name in style_layers:
+            # add style loss:
+            target_feature = model(style_img).detach()
+            style_loss = StyleLoss(target_feature)
+            model.add_module("style_loss_{}".format(i), style_loss)
+            style_losses.append(style_loss)
+
+    # now we trim off the layers after the last content and style losses
+    for i in range(len(model) - 1, -1, -1):
+        if isinstance(model[i], ContentLoss) or isinstance(model[i], StyleLoss):
+            break
+
+    model = model[:(i + 1)]
 
     return model, style_losses, content_losses
 
@@ -91,7 +131,54 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
     # but the optimizer doesn't know that
     # so you will need to clamp the img values to be in that range after every step
 
-    raise NotImplementedError()
+    model, style_losses, content_losses = get_model_and_losses(cnn, style_img, content_img)
+
+    # We want to optimize the input and not the model parameters so we
+    # update all the requires_grad fields accordingly
+    input_img.requires_grad_(True)
+    model.requires_grad_(False)
+
+    optimizer = get_image_optimizer(input_img)
+
+    print('Optimizing..')
+    run = [0]
+    while run[0] <= num_steps:
+
+        def closure():
+            # correct the values of updated input image
+            with torch.no_grad():
+                input_img.clamp_(0, 1)
+
+            optimizer.zero_grad()
+            model(input_img)
+            style_score = 0
+            content_score = 0
+
+            for sl in style_losses:
+                style_score += sl.loss
+            for cl in content_losses:
+                content_score += cl.loss
+
+            style_score *= style_weight
+            content_score *= content_weight
+
+            loss = style_score + content_score
+            loss.backward()
+
+            run[0] += 1
+            if run[0] % 50 == 0:
+                print("run {}:".format(run))
+                print('Style Loss : {:4f} Content Loss: {:4f}'.format(
+                    style_score.item(), content_score.item()))
+                print()
+
+            return style_score + content_score
+
+        optimizer.step(closure)
+
+    # a last correction...
+    with torch.no_grad():
+        input_img.clamp_(0, 1)
 
     # make sure to clamp once you are done
 
@@ -119,12 +206,13 @@ def main(style_img_path, content_img_path):
     # we load a pretrained VGG19 model from the PyTorch models library
     # but only the feature extraction part (conv layers)
     # and configure it for evaluation
-    # cnn = models.vgg19(pretrained=True).features.to(device).eval()
+    cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
     # image reconstruction
     print("Performing Image Reconstruction from white noise initialization")
     # input_img = random noise of the size of content_img on the correct device
     # output = reconstruct the image from the noise
+    output = run_optimization(cnn, content_img, style_img, input_img)
 
     plt.figure()
     imshow(output, title='Reconstructed Image')
@@ -155,6 +243,46 @@ def main(style_img_path, content_img_path):
     plt.show()
 
 
+def create_parser():
+    """Creates a parser for command-line arguments.
+    """
+    parser = argparse.ArgumentParser()
+
+    # Model hyper-parameters
+    parser.add_argument('--image_size', type=int, default=64, help='The side length N to convert images to NxN.')
+    parser.add_argument('--conv_dim', type=int, default=32)
+    parser.add_argument('--noise_size', type=int, default=100)
+
+    # Training hyper-parameters
+    parser.add_argument('--num_epochs', type=int, default=500)
+    parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
+    parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
+    parser.add_argument('--lr', type=float, default=0.0002, help='The learning rate (default 0.0002)')
+    parser.add_argument('--beta1', type=float, default=0.5)
+    parser.add_argument('--beta2', type=float, default=0.999)
+
+    # Data sources
+    parser.add_argument('--data', type=str, default='cat/grumpifyBprocessed',
+                        help='The folder of the training dataset.')
+    parser.add_argument('--data_preprocess', type=str, default='deluxe', help='data preprocess scheme [basic|deluxe]')
+    parser.add_argument('--ext', type=str, default='*.png', help='Choose the file type of images to generate.')
+
+    # Directories and checkpoint/sample iterations
+    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints_vanilla')
+    parser.add_argument('--sample_dir', type=str, default='./vanilla')
+    parser.add_argument('--log_step', type=int, default=10)
+    parser.add_argument('--sample_every', type=int, default=200)
+    parser.add_argument('--checkpoint_every', type=int, default=400)
+
+    # difference augment
+    parser.add_argument('--use_diffaug', type=bool, default=False)
+
+    return parser
+
 if __name__ == '__main__':
+    parser = create_parser()
+    opts = parser.parse_args()
+
+
     args = sys.argv[1:3]
     main(*args)
