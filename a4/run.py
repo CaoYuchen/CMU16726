@@ -153,12 +153,12 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
             if use_style:
                 for sl in style_losses:
                     style_score += sl.loss
+                style_score *= style_weight
+
             if use_content:
                 for cl in content_losses:
                     content_score += cl.loss
-
-            style_score *= style_weight
-            content_score *= content_weight
+                content_score *= content_weight
 
             loss = style_score + content_score
             loss.backward()
@@ -166,8 +166,10 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
             run[0] += 1
             if run[0] % 50 == 0:
                 print("run {}:".format(run))
-                print('Style Loss : {:4f} Content Loss: {:4f}'.format(
-                    style_score.item(), content_score.item()))
+                if use_style:
+                    print('Style Loss : {:4f}'.format(style_score.item()))
+                if use_content:
+                    print('Content Loss: {:4f}'.format(content_score.item()))
                 print()
 
             return style_score + content_score
@@ -210,7 +212,7 @@ def main(style_img_path, content_img_path):
     print("Performing Image Reconstruction from white noise initialization")
     # input_img = random noise of the size of content_img on the correct device
     # output = reconstruct the image from the noise
-    input_img = torch.rand(list(content_img.size), device=device) * 2 - 1
+    input_img = torch.rand_like(content_img, device=device) * 2 + 1
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=False)
 
     plt.figure()
@@ -220,7 +222,7 @@ def main(style_img_path, content_img_path):
     print("Performing Texture Synthesis from white noise initialization")
     # input_img = random noise of the size of content_img on the correct device
     # output = synthesize a texture like style_image
-    input_img = torch.rand(list(content_img.size), device=device) * 2 - 1
+    input_img = torch.rand_like(content_img, device=device) * 2 + 1
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=False, use_style=True)
 
     plt.figure()
@@ -229,11 +231,11 @@ def main(style_img_path, content_img_path):
     # style transfer
     # input_img = random noise of the size of content_img on the correct device
     # output = transfer the style from the style_img to the content image
-    input_img = torch.rand(list(content_img.size), device=device) * 2 - 1
+    input_img = torch.rand_like(content_img, device=device) * 2 + 1
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
 
     plt.figure()
-    imshow(output, title='Output Image from noise')
+    imshow(output, title='Output Image from Noise')
 
     print("Performing Style Transfer from content image initialization")
     # input_img = content_img.clone()
@@ -242,7 +244,7 @@ def main(style_img_path, content_img_path):
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
 
     plt.figure()
-    imshow(output, title='Output Image from noise')
+    imshow(output, title='Output Image from Content Image')
 
     plt.ioff()
     plt.show()
@@ -252,42 +254,15 @@ def create_parser():
     """Creates a parser for command-line arguments.
     """
     parser = argparse.ArgumentParser()
-
-    # Model hyper-parameters
-    parser.add_argument('--image_size', type=int, default=64, help='The side length N to convert images to NxN.')
-    parser.add_argument('--conv_dim', type=int, default=32)
-    parser.add_argument('--noise_size', type=int, default=100)
-
-    # Training hyper-parameters
-    parser.add_argument('--num_epochs', type=int, default=500)
-    parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
-    parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
-    parser.add_argument('--lr', type=float, default=0.0002, help='The learning rate (default 0.0002)')
-    parser.add_argument('--beta1', type=float, default=0.5)
-    parser.add_argument('--beta2', type=float, default=0.999)
-
-    # Data sources
-    parser.add_argument('--data', type=str, default='cat/grumpifyBprocessed',
-                        help='The folder of the training dataset.')
-    parser.add_argument('--data_preprocess', type=str, default='deluxe', help='data preprocess scheme [basic|deluxe]')
-    parser.add_argument('--ext', type=str, default='*.png', help='Choose the file type of images to generate.')
-
-    # Directories and checkpoint/sample iterations
-    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints_vanilla')
-    parser.add_argument('--sample_dir', type=str, default='./vanilla')
-    parser.add_argument('--log_step', type=int, default=10)
-    parser.add_argument('--sample_every', type=int, default=200)
-    parser.add_argument('--checkpoint_every', type=int, default=400)
-
-    # difference augment
-    parser.add_argument('--use_diffaug', type=bool, default=False)
+    # Input Image Path
+    parser.add_argument('--style_img_path', type=str, default="./images/style/picasso.jpg")
+    parser.add_argument('--content_img_path', type=str, default="./images/content/dancing.jpg")
 
     return parser
 
 
 if __name__ == '__main__':
     parser = create_parser()
-    opts = parser.parse_args()
-
-    args = sys.argv[1:3]
-    main(*args)
+    args = parser.parse_args()
+    # args = sys.argv[1:3]
+    main(args.style_img_path, args.content_img_path)

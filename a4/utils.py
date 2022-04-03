@@ -14,6 +14,8 @@ loader = transforms.Compose([
 
 unloader = transforms.ToPILImage()  # reconvert into PIL image
 
+if torch.cuda.is_available():
+        print('Models moved to GPU.')
 
 def load_image(image_name):
     image = Image.open(image_name)
