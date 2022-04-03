@@ -8,7 +8,6 @@ from utils import load_image, Normalization, device, imshow, get_image_optimizer
 from style_and_content import ContentLoss, StyleLoss
 import argparse
 
-
 """A ``Sequential`` module contains an ordered list of child modules. For
 instance, ``vgg19.features`` contains a sequence (Conv2d, ReLU, MaxPool2d,
 Conv2d, ReLU…) aligned in the right order of depth. We need to add our
@@ -23,8 +22,8 @@ style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 
 
 def get_model_and_losses(cnn, style_img, content_img,
-                               content_layers=content_layers_default,
-                               style_layers=style_layers_default):
+                         content_layers=content_layers_default,
+                         style_layers=style_layers_default):
     cnn = copy.deepcopy(cnn)
 
     # build a sequential model consisting of a Normalization layer
@@ -46,16 +45,13 @@ def get_model_and_losses(cnn, style_img, content_img,
     normalization = Normalization().to(device)
     model = nn.Sequential(normalization)
 
-    i = 0  # increment every time we see a conv
+    i = 0
     for layer in cnn.children():
         if isinstance(layer, nn.Conv2d):
             i += 1
             name = 'conv_{}'.format(i)
         elif isinstance(layer, nn.ReLU):
             name = 'relu_{}'.format(i)
-            # The in-place version doesn't play very nicely with the ContentLoss
-            # and StyleLoss we insert below. So we replace with out-of-place
-            # ones here.
             layer = nn.ReLU(inplace=False)
         elif isinstance(layer, nn.MaxPool2d):
             name = 'pool_{}'.format(i)
@@ -154,10 +150,12 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
             style_score = 0
             content_score = 0
 
-            for sl in style_losses:
-                style_score += sl.loss
-            for cl in content_losses:
-                content_score += cl.loss
+            if use_style:
+                for sl in style_losses:
+                    style_score += sl.loss
+            if use_content:
+                for cl in content_losses:
+                    content_score += cl.loss
 
             style_score *= style_weight
             content_score *= content_weight
@@ -212,7 +210,8 @@ def main(style_img_path, content_img_path):
     print("Performing Image Reconstruction from white noise initialization")
     # input_img = random noise of the size of content_img on the correct device
     # output = reconstruct the image from the noise
-    output = run_optimization(cnn, content_img, style_img, input_img)
+    input_img = torch.rand(list(content_img.size), device=device) * 2 - 1
+    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=False)
 
     plt.figure()
     imshow(output, title='Reconstructed Image')
@@ -221,6 +220,8 @@ def main(style_img_path, content_img_path):
     print("Performing Texture Synthesis from white noise initialization")
     # input_img = random noise of the size of content_img on the correct device
     # output = synthesize a texture like style_image
+    input_img = torch.rand(list(content_img.size), device=device) * 2 - 1
+    output = run_optimization(cnn, content_img, style_img, input_img, use_content=False, use_style=True)
 
     plt.figure()
     imshow(output, title='Synthesized Texture')
@@ -228,6 +229,8 @@ def main(style_img_path, content_img_path):
     # style transfer
     # input_img = random noise of the size of content_img on the correct device
     # output = transfer the style from the style_img to the content image
+    input_img = torch.rand(list(content_img.size), device=device) * 2 - 1
+    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
 
     plt.figure()
     imshow(output, title='Output Image from noise')
@@ -235,6 +238,8 @@ def main(style_img_path, content_img_path):
     print("Performing Style Transfer from content image initialization")
     # input_img = content_img.clone()
     # output = transfer the style from the style_img to the content image
+    input_img = content_img.clone()
+    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
 
     plt.figure()
     imshow(output, title='Output Image from noise')
@@ -279,10 +284,10 @@ def create_parser():
 
     return parser
 
+
 if __name__ == '__main__':
     parser = create_parser()
     opts = parser.parse_args()
-
 
     args = sys.argv[1:3]
     main(*args)
