@@ -10,6 +10,7 @@ import argparse
 
 import os
 import imageio
+import torchvision.transforms as transforms
 
 """A ``Sequential`` module contains an ordered list of child modules. For
 instance, ``vgg19.features`` contains a sequence (Conv2d, ReLU, MaxPool2d,
@@ -190,25 +191,23 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
 
 
 def main(style_img_path, content_img_path, output_path):
+    torch.cuda.empty_cache()
     # we've loaded the images for you
     style_img = load_image(style_img_path)
     content_img = load_image(content_img_path)
 
     # interative MPL
-    plt.close()
-    plt.cla()
-    plt.clf()
     plt.ion()
 
     assert style_img.size() == content_img.size(), \
         "we need to import style and content images of the same size"
 
     # plot the original input image:
-    plt.figure()
-    imshow(style_img, title='Style Image')
-
-    plt.figure()
-    imshow(content_img, title='Content Image')
+    # plt.figure()
+    # imshow(style_img, title='Style Image')
+    #
+    # plt.figure()
+    # imshow(content_img, title='Content Image')
 
     # we load a pretrained VGG19 model from the PyTorch models library
     # but only the feature extraction part (conv layers)
@@ -219,53 +218,52 @@ def main(style_img_path, content_img_path, output_path):
     print("Performing Image Reconstruction from white noise initialization")
     # input_img = random noise of the size of content_img on the correct device
     # output = reconstruct the image from the noise
-    input_img = torch.rand_like(content_img, device=device) * 2 + 1
+    input_img = torch.rand_like(content_img, device=device)
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=False)
 
-    plt.figure()
+    fig = plt.figure()
     title = 'Reconstructed Image'
     imshow(output, title=title)
+    save_images(fig, output, output_path, title)
 
-    save_images(output, output_path, title,tag)
-
-    # texture synthesis
-    print("Performing Texture Synthesis from white noise initialization")
-    # input_img = random noise of the size of content_img on the correct device
-    # output = synthesize a texture like style_image
-    input_img = torch.rand_like(content_img, device=device) * 2 + 1
-    output = run_optimization(cnn, content_img, style_img, input_img, use_content=False, use_style=True)
-
-    plt.figure()
-    title='Synthesized Texture'
-    imshow(output, title=title)
-
-    save_images(output, output_path, title,tag)
-    # style transfer
-    # input_img = random noise of the size of content_img on the correct device
-    # output = transfer the style from the style_img to the content image
-    input_img = torch.rand_like(content_img, device=device) * 2 + 1
-    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
-
-    plt.figure()
-    title='Output Image from Noise'
-    imshow(output, title=title)
-
-    save_images(output, output_path, title,tag)
-
-    print("Performing Style Transfer from content image initialization")
+    # # texture synthesis
+    # print("Performing Texture Synthesis from white noise initialization")
+    # # input_img = random noise of the size of content_img on the correct device
+    # # output = synthesize a texture like style_image
+    # input_img = torch.rand_like(content_img, device=device)
+    # output = run_optimization(cnn, content_img, style_img, input_img, use_content=False, use_style=True)
+    #
+    # fig = plt.figure()
+    # title = 'Synthesized Texture'
+    # imshow(output, title=title)
+    # save_images(fig, output_path, title, tag)
+    #
+    # # style transfer
+    # # input_img = random noise of the size of content_img on the correct device
+    # # output = transfer the style from the style_img to the content image
+    # input_img = torch.rand_like(content_img, device=device)
+    # output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
+    #
+    # fig = plt.figure()
+    # title = 'Output Image from Noise'
+    # imshow(output, title=title)
+    # save_images(fig, output_path, title, tag)
+    #
+    #
+    # print("Performing Style Transfer from content image initialization")
+    # # input_img = content_img.clone()
+    # # output = transfer the style from the style_img to the content image
     # input_img = content_img.clone()
-    # output = transfer the style from the style_img to the content image
-    input_img = content_img.clone()
-    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
-
-    plt.figure()
-    title='Output Image from Content Image'
-    imshow(output, title=title)
-
-    save_images(output, output_path, title,tag)
-
+    # output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
+    #
+    # fig = plt.figure()
+    # title = 'Output Image from Content Image'
+    # imshow(output, title=title)
+    # save_images(fig, output_path, title, tag)
+    #
+    #
     plt.ioff()
-    plt.show()
+    # plt.show()
 
 
 def create_parser():
@@ -280,20 +278,22 @@ def create_parser():
     return parser
 
 
-# def to_data(x):
-#     """Converts variable to numpy."""
-#     if torch.cuda.is_available():
-#         x = x.cpu()
-#     return x.detach().numpy()
-
-
-def save_images(images, dir, name, tag):
-    # img = to_data(images)
-
-    path = os.path.join(dir, '{:s}_{:06d}.png'.format(name, tag))
-    # imageio.imwrite(path, img)
-    plt.savefig(path)
+def save_images(fig, dir, name, tag):
+    path = os.path.join(dir, '{:s}_{:s}.png'.format(name, tag))
+    fig.savefig(path)
     print('Saved {}'.format(path))
+
+
+# def save_images(images, output_dir, name):
+#     image = images.cpu().clone()  # we clone the tensor to not do changes on it
+#     image = image.squeeze(0)  # remove the fake batch dimension
+#     # img  = transforms.ToPILImage(image)
+#     unload = transforms.ToPILImage()
+#     img = unload(image)
+#     path = os.path.join(output_dir, '{:s}_{:s}.png'.format(name, tag))
+#     imageio.imwrite(path, img)
+#     # plt.savefig(path)
+#     print('Saved {}'.format(path))
 
 
 if __name__ == '__main__':

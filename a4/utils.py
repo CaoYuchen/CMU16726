@@ -4,6 +4,7 @@ import torchvision.transforms as transforms
 from matplotlib import pyplot as plt
 from PIL import Image
 import torch.optim as optim
+import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu, so we can test on CPU easily
@@ -33,7 +34,6 @@ def imshow(tensor, title=None):
         plt.title(title)
     plt.pause(0.001)  # pause a bit so that plots are updated
 
-
 """Additionally, VGG networks are trained on images with each channel
 normalized by mean=[0.485, 0.456, 0.406] and std=[0.229, 0.224, 0.225].
 We will use them to normalize the image before sending it into the network.
@@ -54,8 +54,10 @@ class Normalization(nn.Module):
         # .view the mean and std to make them [C x 1 x 1] so that they can
         # directly work with image Tensor of shape [B x C x H x W].
         # B is batch size. C is number of channels. H is height and W is width.
-        self.mean = torch.tensor(mean).view(-1, 1, 1)
-        self.std = torch.tensor(std).view(-1, 1, 1)
+        # self.mean = torch.tensor(mean).view(-1, 1, 1)
+        self.mean = mean.clone().detach().view(-1, 1, 1)
+        # self.std = torch.tensor(std).view(-1, 1, 1)
+        self.std = std.clone().detach().view(-1, 1, 1)
 
     def forward(self, img):
         # normalize img
