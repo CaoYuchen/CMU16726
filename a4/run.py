@@ -224,7 +224,7 @@ def main(style_img_path, content_img_path, output_path):
     fig = plt.figure()
     title = 'Reconstructed Image'
     imshow(output, title=title)
-    save_images(fig, output, output_path, title)
+    save_images(fig, output_path, title, tag)
 
     # # texture synthesis
     # print("Performing Texture Synthesis from white noise initialization")
