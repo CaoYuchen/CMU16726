@@ -8,6 +8,9 @@ from utils import load_image, Normalization, device, imshow, get_image_optimizer
 from style_and_content import ContentLoss, StyleLoss
 import argparse
 
+import os
+import imageio
+
 """A ``Sequential`` module contains an ordered list of child modules. For
 instance, ``vgg19.features`` contains a sequence (Conv2d, ReLU, MaxPool2d,
 Conv2d, ReLU…) aligned in the right order of depth. We need to add our
@@ -19,6 +22,7 @@ module that has content loss and style loss modules correctly inserted.
 # desired depth layers to compute style/content losses :
 content_layers_default = ['conv_4']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+tag = 'conv_4'
 
 
 def get_model_and_losses(cnn, style_img, content_img,
@@ -185,12 +189,15 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
     return input_img
 
 
-def main(style_img_path, content_img_path):
+def main(style_img_path, content_img_path, output_path):
     # we've loaded the images for you
     style_img = load_image(style_img_path)
     content_img = load_image(content_img_path)
 
     # interative MPL
+    plt.close()
+    plt.cla()
+    plt.clf()
     plt.ion()
 
     assert style_img.size() == content_img.size(), \
@@ -216,7 +223,10 @@ def main(style_img_path, content_img_path):
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=False)
 
     plt.figure()
-    imshow(output, title='Reconstructed Image')
+    title = 'Reconstructed Image'
+    imshow(output, title=title)
+
+    save_images(output, output_path, title,tag)
 
     # texture synthesis
     print("Performing Texture Synthesis from white noise initialization")
@@ -226,8 +236,10 @@ def main(style_img_path, content_img_path):
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=False, use_style=True)
 
     plt.figure()
-    imshow(output, title='Synthesized Texture')
+    title='Synthesized Texture'
+    imshow(output, title=title)
 
+    save_images(output, output_path, title,tag)
     # style transfer
     # input_img = random noise of the size of content_img on the correct device
     # output = transfer the style from the style_img to the content image
@@ -235,7 +247,10 @@ def main(style_img_path, content_img_path):
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
 
     plt.figure()
-    imshow(output, title='Output Image from Noise')
+    title='Output Image from Noise'
+    imshow(output, title=title)
+
+    save_images(output, output_path, title,tag)
 
     print("Performing Style Transfer from content image initialization")
     # input_img = content_img.clone()
@@ -244,7 +259,10 @@ def main(style_img_path, content_img_path):
     output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
 
     plt.figure()
-    imshow(output, title='Output Image from Content Image')
+    title='Output Image from Content Image'
+    imshow(output, title=title)
+
+    save_images(output, output_path, title,tag)
 
     plt.ioff()
     plt.show()
@@ -257,12 +275,29 @@ def create_parser():
     # Input Image Path
     parser.add_argument('--style_img_path', type=str, default="./images/style/picasso.jpg")
     parser.add_argument('--content_img_path', type=str, default="./images/content/dancing.jpg")
+    parser.add_argument('--output_path', type=str, default="./output/")
 
     return parser
+
+
+# def to_data(x):
+#     """Converts variable to numpy."""
+#     if torch.cuda.is_available():
+#         x = x.cpu()
+#     return x.detach().numpy()
+
+
+def save_images(images, dir, name, tag):
+    # img = to_data(images)
+
+    path = os.path.join(dir, '{:s}_{:06d}.png'.format(name, tag))
+    # imageio.imwrite(path, img)
+    plt.savefig(path)
+    print('Saved {}'.format(path))
 
 
 if __name__ == '__main__':
     parser = create_parser()
     args = parser.parse_args()
     # args = sys.argv[1:3]
-    main(args.style_img_path, args.content_img_path)
+    main(args.style_img_path, args.content_img_path, args.output_path)
