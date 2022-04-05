@@ -26,7 +26,7 @@ module that has content loss and style loss modules correctly inserted.
 content_layers_default = ['conv_4']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 tag = 'C4_S12345'
-combo = 'FP'
+combo = 'EP'
 style_weight = 50000
 content_weight = 1
 
@@ -294,7 +294,7 @@ def create_parser():
     """
     parser = argparse.ArgumentParser()
     # Input Image Path
-    parser.add_argument('--style_img_path', type=str, default="./images/style/frida_kahlo.jpeg")
+    parser.add_argument('--style_img_path', type=str, default="./images/style/escher_sphere.jpeg")
     parser.add_argument('--content_img_path', type=str, default="./images/content/phipps.jpeg")
     parser.add_argument('--output_path', type=str, default="./output/")
 

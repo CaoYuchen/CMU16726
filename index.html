@@ -729,7 +729,7 @@ Webiste: 16726 course website
                         <hr class="col-xs-12 mr-4">
                         <h3>Part 3: Style Transfer</h3>
                         <p class="col-xs-12 mr-4">
-                            After deciding the content loss and style loss structure, it's time to merge them together in the network. In the implementation, to fit the purpose of merging different size of style and content image, I first resize both of the style and content image to (512,-1), and because we want to maintain content image as same size and ratio as original input, I fix the content's size, and do centerCrop on the style image to fit exactly the same size with content image, this is also because we care more about the pattern and texture of the style image instead of its completeness. 
+                            After deciding the content loss and style loss structure, it's time to merge them together in the network. In the implementation, to fit the purpose of merging different size of style and content image, I first resize both of the style and content image's smaller dimension to 512 if using cuda, and because we want to maintain content image as same size and ratio as original input, I fix the content's size, and do first do padding for the case when style image's longer dimension is content image's short dimension, this is because if there is empty(black) part in style image, the style feature can be hugely deprecated. And then I do centerCrop on the style image to fit exactly the same size with content image, this is also because we care more about the pattern and texture of the style image instead of its completeness. 
                         </p>
                         <p class="col-xs-12 mr-4">
                             The major hyperParameters are the weights of content and style loss, I fix the content loss weight as 1, and adjust style loss differently, the results are shown below:
@@ -748,6 +748,9 @@ Webiste: 16726 course website
                                 <img src="./media/a4/Output_Image_from_Noise_SW1000000_CW1_PD_C4_S12345.png" height="200px">
                             </div>
                         </div>
+                        <p class="col-xs-12 mr-4">
+                            The weight of style loss ranges a big number, as you can see, for weight < 10^4, the style barely works, but when weight > 10^6, it overwrittens the content. Therefore, a good weight is range(10^4,10^6), however, there is no best weight for a general implementaion. I realized the best weight is different for different style and content input. My general choice is around 10^5. For dancing image and picasso style, I choose style weight of 1.5 * 10^5.
+                        </p>
                         <hr class="col-xs-12 mr-4">
                         <h3>Bells & Whistles</h3>
                         <p class="col-xs-12 mr-4">
