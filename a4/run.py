@@ -299,7 +299,7 @@ def create_parser():
     parser = argparse.ArgumentParser()
     # Input Image Path
     parser.add_argument('--style_img_path', type=str, default="./images/style/titan.jpg")
-    parser.add_argument('--content_img_path', type=str, default="./images/content/campus3.jpg")
+    parser.add_argument('--content_img_path', type=str, default="./images/content/campus4.jpg")
     parser.add_argument('--output_path', type=str, default="./output/")
 
     return parser
