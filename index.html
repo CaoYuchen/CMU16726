@@ -72,10 +72,10 @@ Webiste: 16726 course website
                     <a class="nav-link" id="a2-tab" data-toggle="tab" href="#a2" role="tab" aria-controls="a2" aria-selected="false">Assignment2</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" id="a3-tab" data-toggle="tab" href="#a3" role="tab" aria-controls="a3" aria-selected="true">Assignment3</a>
+                    <a class="nav-link" id="a3-tab" data-toggle="tab" href="#a3" role="tab" aria-controls="a3" aria-selected="true">Assignment3</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="a4-tab" data-toggle="tab" href="#a4" role="tab" aria-controls="a4" aria-selected="false">Assignment4</a>
+                    <a class="nav-link active" id="a4-tab" data-toggle="tab" href="#a4" role="tab" aria-controls="a4" aria-selected="false">Assignment4</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="a5-tab" data-toggle="tab" href="#a5" role="tab" aria-controls="a5" aria-selected="false">Assignment5</a>
@@ -410,7 +410,7 @@ Webiste: 16726 course website
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade show active" id="a3" role="tabpanel" aria-labelledby="a3-tab">
+            <div class="tab-pane fade" id="a3" role="tabpanel" aria-labelledby="a3-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>Assignment #3</h2>
@@ -638,16 +638,122 @@ Webiste: 16726 course website
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="a4" role="tabpanel" aria-labelledby="a4-tab">
+            <div class="tab-pane fade  show active" id="a4" role="tabpanel" aria-labelledby="a4-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>Assignment #4</h2>
                         <hr class="col-xs-12 mr-4">
-                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
-                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
-                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
-                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
-                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                        <h3>Introduction</h3>
+                        <p class="col-xs-12 mr-4">
+                            Neural Style Transfer is a vgg-19 based nueral network, utlizes regression method MSE for loss function, and LBFGS for input image(noise) optimization. It only uses the feature extraction part of vgg-19, and only for evaluation purpose(no gradient optimizaiton for these layers), instead, the optimizaiton happens in the loss function and input(two ends). And the loss function consists of two parts, content loss and style loss, we'll implement them separately first, and then combine them together with assigned weights.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Part 1: Content Reconstruction</h3>
+                        <p class="col-xs-12 mr-4">
+                            Content reconstruction mainly tries to regress a noise to an input content image, so that noise can gradually resemble the content image, therefore, the loss function is a straightforward MSE, and in implementaion, because we don't want to update vgg-19, the detach is added at the end of vgg-19. I first try content loss for each single layer and have a general direciton of how the noise approxiate the content image under the impact of different dept of neural layer's feature. Here is the result with input of a dancing.jpeg:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/dancing.jpeg" height="300px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Reconstructed_Image_Conv_1.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_2.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_3.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_4.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_5.png" height="200px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            Compared with the input content image, it's not hard to tell that the shallower layer the content loss is put, the loser the noise ends up to the content image. I think the deeper layer output is more interesting, so I tried several conbinations for the deep layers from 3-5. The results are below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Reconstructed_Image_Conv_34.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_35.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_45.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_345.png" height="200px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_12345.png" height="200px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            First look at the last image, we can tell if we calculate content loss in every layer, the result is pretty much like single layer 34 and single layer 3, which means that shallow layer's loss has dominated the output. And 35, 45, 345 are pretty much close to layer 4 with different color saturation, the difference is trivial and the choice if more like a style preference. I personally like the faint style, so I simply choose to apply content loss to layer 4, because it seems easier with blend with style if the content image has low saturaion. And I use two different white noise to generate the content image, the results are very much the same.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Reconstructed_Image_Conv_4(1).png" height="300px">
+                                <img src="./media/a4/Reconstructed_Image_Conv_4.png" height="300px">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Part 2: Texture Synthesis</h3>
+                        <p class="col-xs-12 mr-4">
+                            Style synthesis is pretty much the same as content structure, except for that the output of vgg-19 is processed with gram_matrix and then calculated the MSE loss. Similarly, I first try different single layer with picasso.jpeg: 
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/picasso.jpeg" height="300px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Synthesized_Texture_Conv_1.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_2.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_3.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_4.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_5.png" height="200px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            We can see that the first layer has the strongest impact on the style, and the last layer only has few similarity in style with the origianl style image. And the shallow layer has dense and blur style, and the deep layer has light and sharp style. Because we want the style be strong to overwritten the content's original style, the first layer's result is more of what we want. So I focus on the front layer, and incrementally add more layers to the first layer, the results are below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Synthesized_Texture_Conv_12.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_123.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_1234.png" height="200px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_12345.png" height="200px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            From the results, I have a general feeling that when apply style loss to every layer, the output style image has both good sharpness and densive style, so I choose the layer 12345 for my preference. And I test it with different input random noise, and we can tell that the generated style is visually different just by eye-balled. This means everytime, we can have the similar but different style.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Synthesized_Texture_Conv_12345.png" height="300px">
+                                <img src="./media/a4/Synthesized_Texture_Conv_12345(1).png" height="300px">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Part 3: Style Transfer</h3>
+                        <p class="col-xs-12 mr-4">
+                            After deciding the content loss and style loss structure, it's time to merge them together in the network. In the implementation, to fit the purpose of merging different size of style and content image, I first resize both of the style and content image to (512,-1), and because we want to maintain content image as same size and ratio as original input, I fix the content's size, and do centerCrop on the style image to fit exactly the same size with content image, this is also because we care more about the pattern and texture of the style image instead of its completeness. 
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            The major hyperParameters are the weights of content and style loss, I fix the content loss weight as 1, and adjust style loss differently, the results are shown below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/Output_Image_from_Noise_SW1_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW10000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW150000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW250000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW500000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW600000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW750000_CW1_PD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW1000000_CW1_PD_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Bells & Whistles</h3>
+                        <p class="col-xs-12 mr-4">
+                            
+                        </p>
+                        <hr class="col-xs-12 mr-4">
                     </div>
                 </div>
             </div>

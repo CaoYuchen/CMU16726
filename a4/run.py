@@ -9,8 +9,10 @@ from style_and_content import ContentLoss, StyleLoss
 import argparse
 
 import os
+import time
 import imageio
 import torchvision.transforms as transforms
+import math
 
 """A ``Sequential`` module contains an ordered list of child modules. For
 instance, ``vgg19.features`` contains a sequence (Conv2d, ReLU, MaxPool2d,
@@ -23,7 +25,10 @@ module that has content loss and style loss modules correctly inserted.
 # desired depth layers to compute style/content losses :
 content_layers_default = ['conv_4']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
-tag = 'conv_4'
+tag = 'C4_S12345'
+combo = 'FP'
+style_weight = 50000
+content_weight = 1
 
 
 def get_model_and_losses(cnn, style_img, content_img,
@@ -196,6 +201,18 @@ def main(style_img_path, content_img_path, output_path):
     style_img = load_image(style_img_path)
     content_img = load_image(content_img_path)
 
+    # center crop style_image to match content image
+    if style_img.size(dim=1) != 3:
+        style_img = style_img.repeat(1, 3, 1, 1)
+    if style_img.size(dim=2) > style_img.size(dim=3):
+        pad_size = math.ceil((content_img.size(dim=3) - style_img.size(dim=3)) / 2.0)
+        padding = transforms.Pad((pad_size, pad_size), padding_mode="reflect")
+        style_img = padding(style_img)
+        # style_img.resize((1, 3, -1, content_img.size(dim=3)))
+
+    centerCrop = transforms.CenterCrop((content_img.size(dim=2), content_img.size(dim=3)))
+    style_img = centerCrop(style_img)
+
     # interative MPL
     plt.ion()
 
@@ -203,11 +220,11 @@ def main(style_img_path, content_img_path, output_path):
         "we need to import style and content images of the same size"
 
     # plot the original input image:
-    # plt.figure()
-    # imshow(style_img, title='Style Image')
-    #
-    # plt.figure()
-    # imshow(content_img, title='Content Image')
+    plt.figure()
+    imshow(style_img, title='Style Image')
+
+    plt.figure()
+    imshow(content_img, title='Content Image')
 
     # we load a pretrained VGG19 model from the PyTorch models library
     # but only the feature extraction part (conv layers)
@@ -216,15 +233,15 @@ def main(style_img_path, content_img_path, output_path):
 
     # image reconstruction
     print("Performing Image Reconstruction from white noise initialization")
-    # input_img = random noise of the size of content_img on the correct device
-    # output = reconstruct the image from the noise
-    input_img = torch.rand_like(content_img, device=device)
-    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=False)
-
-    fig = plt.figure()
-    title = 'Reconstructed Image'
-    imshow(output, title=title)
-    save_images(fig, output_path, title, tag)
+    # # input_img = random noise of the size of content_img on the correct device
+    # # output = reconstruct the image from the noise
+    # input_img = torch.rand_like(content_img, device=device)
+    # output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=False)
+    #
+    # fig = plt.figure()
+    # title = 'Reconstructed Image'
+    # imshow(output, title=title + ' ' + tag)
+    # save_images(fig, output_path, title, tag)
 
     # # texture synthesis
     # print("Performing Texture Synthesis from white noise initialization")
@@ -235,33 +252,39 @@ def main(style_img_path, content_img_path, output_path):
     #
     # fig = plt.figure()
     # title = 'Synthesized Texture'
-    # imshow(output, title=title)
+    # imshow(output, title=title + ' ' + tag)
     # save_images(fig, output_path, title, tag)
-    #
-    # # style transfer
-    # # input_img = random noise of the size of content_img on the correct device
-    # # output = transfer the style from the style_img to the content image
-    # input_img = torch.rand_like(content_img, device=device)
-    # output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
-    #
-    # fig = plt.figure()
-    # title = 'Output Image from Noise'
-    # imshow(output, title=title)
-    # save_images(fig, output_path, title, tag)
-    #
-    #
-    # print("Performing Style Transfer from content image initialization")
-    # # input_img = content_img.clone()
-    # # output = transfer the style from the style_img to the content image
+
+    # style transfer
+    # input_img = random noise of the size of content_img on the correct device
+    # output = transfer the style from the style_img to the content image
+    start = time.time()
+    input_img = torch.rand_like(content_img, device=device)
+    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True,
+                              style_weight=style_weight, content_weight=content_weight)
+    print(f"Runtime of the program is {time.time() - start}")
+
+    fig = plt.figure()
+    title = 'Output Image from Noise' + "_SW" + str(style_weight) + "_CW" + str(content_weight)
+    imshow(output, title=title + ' ' + tag)
+    title += "_" + combo
+    save_images(fig, output_path, title, tag)
+
+    print("Performing Style Transfer from content image initialization")
     # input_img = content_img.clone()
-    # output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True)
-    #
-    # fig = plt.figure()
-    # title = 'Output Image from Content Image'
-    # imshow(output, title=title)
-    # save_images(fig, output_path, title, tag)
-    #
-    #
+    # output = transfer the style from the style_img to the content image
+    start = time.time()
+    input_img = content_img.clone()
+    output = run_optimization(cnn, content_img, style_img, input_img, use_content=True, use_style=True,
+                              style_weight=style_weight, content_weight=content_weight)
+    print(f"Runtime of the program is {time.time() - start}")
+
+    fig = plt.figure()
+    title = 'Output Image from Content Image' + "_SW" + str(style_weight) + "_CW" + str(content_weight)
+    imshow(output, title=title + ' ' + tag)
+    title += "_"+ combo
+    save_images(fig, output_path, title, tag)
+
     plt.ioff()
     # plt.show()
 
@@ -271,14 +294,15 @@ def create_parser():
     """
     parser = argparse.ArgumentParser()
     # Input Image Path
-    parser.add_argument('--style_img_path', type=str, default="./images/style/picasso.jpg")
-    parser.add_argument('--content_img_path', type=str, default="./images/content/dancing.jpg")
+    parser.add_argument('--style_img_path', type=str, default="./images/style/frida_kahlo.jpeg")
+    parser.add_argument('--content_img_path', type=str, default="./images/content/phipps.jpeg")
     parser.add_argument('--output_path', type=str, default="./output/")
 
     return parser
 
 
 def save_images(fig, dir, name, tag):
+    name = name.replace(" ", "_")
     path = os.path.join(dir, '{:s}_{:s}.png'.format(name, tag))
     fig.savefig(path)
     print('Saved {}'.format(path))
