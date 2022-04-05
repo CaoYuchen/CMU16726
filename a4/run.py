@@ -26,8 +26,8 @@ module that has content loss and style loss modules correctly inserted.
 content_layers_default = ['conv_4']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 tag = 'C4_S12345'
-combo = 'EP'
-style_weight = 50000
+combo = 'TitanCampus'
+style_weight = 200000
 content_weight = 1
 
 
@@ -204,9 +204,13 @@ def main(style_img_path, content_img_path, output_path):
     # center crop style_image to match content image
     if style_img.size(dim=1) != 3:
         style_img = style_img.repeat(1, 3, 1, 1)
-    if style_img.size(dim=2) > style_img.size(dim=3):
+    if content_img.size(dim=3) > style_img.size(dim=3):
         pad_size = math.ceil((content_img.size(dim=3) - style_img.size(dim=3)) / 2.0)
         padding = transforms.Pad((pad_size, pad_size), padding_mode="reflect")
+        style_img = padding(style_img)
+    if content_img.size(dim=2) > style_img.size(dim=2):
+        pad_size = math.ceil((content_img.size(dim=2) - style_img.size(dim=2)) / 2.0)
+        padding = transforms.Pad((0,0,pad_size, pad_size), padding_mode="reflect")
         style_img = padding(style_img)
         # style_img.resize((1, 3, -1, content_img.size(dim=3)))
 
@@ -294,8 +298,8 @@ def create_parser():
     """
     parser = argparse.ArgumentParser()
     # Input Image Path
-    parser.add_argument('--style_img_path', type=str, default="./images/style/escher_sphere.jpeg")
-    parser.add_argument('--content_img_path', type=str, default="./images/content/phipps.jpeg")
+    parser.add_argument('--style_img_path', type=str, default="./images/style/titan.jpg")
+    parser.add_argument('--content_img_path', type=str, default="./images/content/campus3.jpg")
     parser.add_argument('--output_path', type=str, default="./output/")
 
     return parser
