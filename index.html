@@ -751,11 +751,141 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             The weight of style loss ranges a big number, as you can see, for weight < 10^4, the style barely works, but when weight > 10^6, it overwrittens the content. Therefore, a good weight is range(10^4,10^6), however, there is no best weight for a general implementaion. I realized the best weight is different for different style and content input. My general choice is around 10^5. For dancing image and picasso style, I choose style weight of 1.5 * 10^5.
                         </p>
+                        <p class="col-xs-12 mr-4">
+                            To test the robustness of the implementation, I mix 3 content images and 3 style images to get 9 group of style transfer. The content & style input and the noise-based & content-based output are listed below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/waterfall.png" height="200px">
+                                <img src="./media/a4/boy2.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_FF_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_FF_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/waterfall.png" height="200px">
+                                <img src="./media/a4/sphere2.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_SD_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_AB_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/waterfall.png" height="200px">
+                                <img src="./media/a4/star.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_SW_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_SW_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/god.png" height="200px">
+                                <img src="./media/a4/boy3.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_FWally_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_FWally_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/god.png" height="200px">
+                                <img src="./media/a4/sphere3.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_SWally_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_SWally_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/god.png" height="200px">
+                                <img src="./media/a4/star3.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_StarWally_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_StarWally_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/garden.png" height="200px">
+                                <img src="./media/a4/boy.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_FP_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_FP_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/garden.png" height="200px">
+                                <img src="./media/a4/sphere.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_EP_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_EP_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/garden.png" height="200px">
+                                <img src="./media/a4/star2.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_SPP_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_SPP_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            From the experiment, we can tell that images generated from noise and content image are different, and the weight can impact both the output, I export relatively good results for different images combination with different weights. I think the weights depends on the strength of the style image, and the initial color saturation and intensity of content image. By comparison, we can tell that noise generated image has stronger style pattern, and the pattern tends to overwritten the content feature, whereas the content image generated image has good style and content shape at the same time, therefore I mostly use content image to generate outputs for the later section. And the running time varies from image to image, but the average running time goes around 23s for noise image, 19s for content image. It's because the regression loss calculation is more time comsuming for noise task.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            I'm quite interested in the topic of architecture, and I collect a group of CMU campus photos, apply the style transfer on them. Here are the results:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/campus3.png" height="200px">
+                                <img src="./media/a4/cyberpunk.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW50000_CW1_CyberCampus_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_CyberCampus_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/campus1.png" height="200px">
+                                <img src="./media/a4/gibli.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_GibliCampus_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_GibliCampus_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/campus2.png" height="200px">
+                                <img src="./media/a4/postfuture.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_PostCampus_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW50000_CW1_PostCampus_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/campus4.png" height="200px">
+                                <img src="./media/a4/titan.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Noise_SW100000_CW1_TitanCampus_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_TitanCampus_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
                         <hr class="col-xs-12 mr-4">
                         <h3>Bells & Whistles</h3>
                         <p class="col-xs-12 mr-4">
-                            
+                            <b>Previous Assignments as Content Image</b>
                         </p>
+                        <p class="col-xs-12 mr-4">
+                            I choose two outputs from previous assignments of Poisson Blending and CycleGAN, and apply style transfer to them:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/deluxe_diff.png" height="150px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_ScreamCat_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center col-12">
+                                <img src="./media/a4/ballon.jpeg" height="150px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_StarBallon_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_ScreamBallon_C4_S12345.png" height="200px">
+                                <img src="./media/a4/Output_Image_from_Content_Image_SW100000_CW1_PicassoBallon_C4_S12345.png" height="200px">
+                            </div>
+                        </div>
                         <hr class="col-xs-12 mr-4">
                     </div>
                 </div>
