@@ -33,7 +33,7 @@ content_weight = 1
 
 def get_model_and_losses(cnn, style_img, content_img,
                          content_layers=content_layers_default,
-                         style_layers=style_layers_default):
+                         style_layers=style_layers_default, make_dot=None):
     cnn = copy.deepcopy(cnn)
 
     # build a sequential model consisting of a Normalization layer
@@ -92,7 +92,6 @@ def get_model_and_losses(cnn, style_img, content_img,
             break
 
     model = model[:(i + 1)]
-
     return model, style_losses, content_losses
 
 
@@ -145,6 +144,10 @@ def run_optimization(cnn, content_img, style_img, input_img, use_content=True, u
     model.requires_grad_(False)
 
     optimizer = get_image_optimizer(input_img)
+
+    # from torchviz import make_dot
+    # y = model(input_img)
+    # make_dot(y.mean(), params=dict(list(model.named_parameters()))).render("rnn_torchviz", format="png")
 
     print('Optimizing..')
     run = [0]

@@ -38,7 +38,7 @@ def build_model(name):
             model = legacy.load_network_pkl(f)['G_ema']
             z_dim = model.z_dim
     else:
-         return NotImplementedError('model [%s] is not implemented', name)
+        return NotImplementedError('model [%s] is not implemented', name)
     if torch.cuda.is_available():
         model = model.cuda()
     model.eval()
@@ -47,6 +47,7 @@ def build_model(name):
 
 class Wrapper(nn.Module):
     """The wrapper helps to abstract stylegan / vanilla GAN, z / w latent"""
+
     def __init__(self, args, model, z_dim):
         super().__init__()
         self.model, self.z_dim = model, z_dim
@@ -84,6 +85,21 @@ class Normalization(nn.Module):
         return (img - self.mean) / self.std
 
 
+class ContentLoss(nn.Module):
+
+    def __init__(self, target, ):
+        super(ContentLoss, self).__init__()
+        # you need to `detach' the target content from the graph used to
+        # compute the gradient in the forward pass that made it so that we don't track
+        # those gradients anymore
+        self.target = target.detach()
+
+    def forward(self, input):
+        # this needs to be a passthrough where you save the appropriate loss value
+        self.loss = F.mse_loss(input, self.target)
+        return input
+
+
 class PerceptualLoss(nn.Module):
     def __init__(self, add_layer=['conv_5']):
         super().__init__()
@@ -92,47 +108,31 @@ class PerceptualLoss(nn.Module):
         norm = Normalization(cnn_normalization_mean, cnn_normalization_std)
         cnn = vgg19(pretrained=True).features.to(device).eval()
 
-        print(cnn)
         # TODO (Part 1): implement the Perceptual/Content loss
         #                hint: hw4
         # You may split the model into different parts and store each part in 'self.model'
         self.model = nn.ModuleList()
-        # i = 0
-        # for layer in cnn.children():
-        #     if isinstance(layer, nn.Conv2d):
-        #         i += 1
-        #         name = 'conv_{}'.format(i)
-        #     elif isinstance(layer, nn.ReLU):
-        #         name = 'relu_{}'.format(i)
-        #         layer = nn.ReLU(inplace=False)
-        #     elif isinstance(layer, nn.MaxPool2d):
-        #         name = 'pool_{}'.format(i)
-        #     elif isinstance(layer, nn.BatchNorm2d):
-        #         name = 'bn_{}'.format(i)
-        #     else:
-        #         raise RuntimeError('Unrecognized layer: {}'.format(layer.__class__.__name__))
-        #
-        #     self.model.add_module(name, layer)
-        #
-        #     if name in content_layers:
-        #         # add content loss:
-        #         target = model(content_img).detach()
-        #         content_loss = ContentLoss(target)
-        #         model.add_module("content_loss_{}".format(i), content_loss)
-        #         content_losses.append(content_loss)
-        #
-        # # now we trim off the layers after the last content and style losses
-        # for i in range(len(model) - 1, -1, -1):
-        #     if isinstance(model[i], ContentLoss) or isinstance(model[i], StyleLoss):
-        #         break
-        #
-        # model = model[:(i + 1)]
+        self.model.append(norm)
+        self.add_layer = add_layer
+        i = 0
+        for layer in cnn.children():
+            if isinstance(layer, nn.Conv2d):
+                i += 1
+                name = 'conv_{}'.format(i)
+            elif isinstance(layer, nn.ReLU):
+                layer = nn.ReLU(inplace=False)
+            self.model.append(layer)
+
+            if name == add_layer[-1]:
+                break
+
+        # self.model = nn.Sequential(norm, *self.model)
 
     def forward(self, pred, target):
 
         if isinstance(target, tuple):
             target, mask = target
-        
+
         loss = 0.
         for net in self.model:
             pred = net(pred)
@@ -144,21 +144,29 @@ class PerceptualLoss(nn.Module):
             # TODO (Part 3): if mask is not None, then you should mask out the gradient
             #                based on 'mask==0'. You may use F.adaptive_avg_pool2d() to 
             #                resize the mask such that it has the same shape as the feature map.
-            pass
+            i = 0
+            if isinstance(net, nn.Conv2d):
+                i += 1
+                name = 'conv_{}'.format(i)
+                if name in self.add_layer:
+                    # add content loss:
+                    content_loss = ContentLoss(target.detach())
+                    loss += content_loss(pred.detach())
+
         return loss
+
 
 class Criterion(nn.Module):
     def __init__(self, args, mask=False, layer=['conv_5']):
         super().__init__()
         self.perc_wgt = args.perc_wgt
-        self.l1_wgt = args.l1_wgt # weight for l1 loss/mask loss
+        self.l1_wgt = args.l1_wgt  # weight for l1 loss/mask loss
         self.l2_wgt = args.l2_wgt
-        self.nnl_wgt = args.nnl_wgt
+        self.nll_wgt = args.nll_wgt
         self.bce_wgt = args.bce_wgt
-        self.hinge_wgt = args.hinge_wgt
         self.loss_type = args.loss_type
         self.mask = mask
-        
+
         self.perc = PerceptualLoss(layer)
 
     def forward(self, pred, target):
@@ -170,17 +178,18 @@ class Criterion(nn.Module):
         else:
             # TODO (Part 1): loss w/o mask
             if self.loss_type == "l1":
-                loss = self.l1_wgt
+                lp_loss = self.l1_wgt * torch.linalg.norm(target - pred, ord=1)
             elif self.loss_type == "l2":
-                loss = self.l2_wgt
-            elif self.loss_type == "nnl":
-                loss = self.nnl_wgt
+                lp_loss = self.l2_wgt * torch.linalg.norm(target - pred)
+            elif self.loss_type == "nll":
+                nll = nn.NLLLoss()
+                lp_loss = self.nll_wgt * nll(pred, target)
             elif self.loss_type == "bce":
-                loss = self.bce_wgt
-            elif self.loss_type == "hinge":
-                loss = self.hinge_wgt
+                bce = nn.BCELoss()
+                lp_loss = self.bce_wgt * bce(pred, target)
             else:
-               raise NotImplementedError('%s is not supported' % self.loss_type)
+                raise NotImplementedError('%s is not supported' % self.loss_type)
+            loss = self.perc_wgt * self.perc(pred, target) + lp_loss
         return loss
 
 
@@ -253,6 +262,7 @@ def optimize_para(wrapper, param, target, criterion, num_step, save_prefix=None,
     delta = delta.requires_grad_().to(device)
     optimizer = FullBatchLBFGS([delta], lr=.1, line_search='Wolfe')
     iter_count = [0]
+
     def closure():
         iter_count[0] += 1
         # TODO (Part 1): Your optimiztion code. Free free to try out SGD/Adam.
@@ -347,7 +357,7 @@ def interpolate(args):
         with torch.no_grad():
             # TODO (Part 2): interpolation code
             #                hint: Write a for loop to append the convex combinations to image_list
-            image_list.append(dst) #change dst
+            image_list.append(dst)  # change dst
         save_gifs(image_list, 'output/interpolate/%d_%s_%s' % (idx, args.model, args.latent))
         if idx >= 3:
             break
@@ -358,18 +368,18 @@ def parse_arg():
     """Creates a parser for command-line arguments.
     """
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('--model', type=str, default='stylegan', choices=['vanilla', 'stylegan'])
     parser.add_argument('--mode', type=str, default='project', choices=['sample', 'project', 'draw', 'interpolate'])
     parser.add_argument('--latent', type=str, default='z', choices=['z', 'w', 'w+'])
-    parser.add_argument('--n_iters', type=int, default=1000, help="number of optimization steps in the image projection")
-    parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2','nnl','bce','hinge'])
+    parser.add_argument('--n_iters', type=int, default=1000,
+                        help="number of optimization steps in the image projection")
+    parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'nll', 'bce'])
     parser.add_argument('--perc_wgt', type=float, default=0.01, help="perc loss weight")
     parser.add_argument('--l1_wgt', type=float, default=10., help="L1 pixel loss weight")
     parser.add_argument('--l2_wgt', type=float, default=10., help="L2 pixel loss weight")
-    parser.add_argument('--nnl_wgt', type=float, default=10., help="NNL pixel loss weight")
+    parser.add_argument('--nll_wgt', type=float, default=10., help="NLL pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
-    parser.add_argument('--hinge_wgt', type=float, default=10., help="Hinge pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
     parser.add_argument('--input', type=str, default='data/cat/*.png', help="path to the input image")
     return parser.parse_args()
