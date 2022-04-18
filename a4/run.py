@@ -210,7 +210,7 @@ def main(style_img_path, content_img_path, output_path):
         style_img = padding(style_img)
     if content_img.size(dim=2) > style_img.size(dim=2):
         pad_size = math.ceil((content_img.size(dim=2) - style_img.size(dim=2)) / 2.0)
-        padding = transforms.Pad((0,0,pad_size, pad_size), padding_mode="reflect")
+        padding = transforms.Pad((0, 0, pad_size, pad_size), padding_mode="reflect")
         style_img = padding(style_img)
         # style_img.resize((1, 3, -1, content_img.size(dim=3)))
 
@@ -286,7 +286,7 @@ def main(style_img_path, content_img_path, output_path):
     fig = plt.figure()
     title = 'Output Image from Content Image' + "_SW" + str(style_weight) + "_CW" + str(content_weight)
     imshow(output, title=title + ' ' + tag)
-    title += "_"+ combo
+    title += "_" + combo
     save_images(fig, output_path, title, tag)
 
     plt.ioff()

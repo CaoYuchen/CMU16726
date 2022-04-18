@@ -121,6 +121,11 @@ class Criterion(nn.Module):
         super().__init__()
         self.perc_wgt = args.perc_wgt
         self.l1_wgt = args.l1_wgt # weight for l1 loss/mask loss
+        self.l2_wgt = args.l2_wgt
+        self.nnl_wgt = args.nnl_wgt
+        self.bce_wgt = args.bce_wgt
+        self.hinge_wgt = args.hinge_wgt
+        self.loss_type = args.loss_type
         self.mask = mask
         
         self.perc = PerceptualLoss(layer)
@@ -133,7 +138,18 @@ class Criterion(nn.Module):
             pass
         else:
             # TODO (Part 1): loss w/o mask
-            pass
+            if self.loss_type == "l1":
+                loss = self.l1_wgt
+            elif self.loss_type == "l2":
+                loss = self.l2_wgt
+            elif self.loss_type == "nnl":
+                loss = self.nnl_wgt
+            elif self.loss_type == "bce":
+                loss = self.bce_wgt
+            elif self.loss_type == "hinge":
+                loss = self.hinge_wgt
+            else:
+               raise NotImplementedError('%s is not supported' % self.loss_type)
         return loss
 
 
@@ -315,8 +331,13 @@ def parse_arg():
     parser.add_argument('--mode', type=str, default='sample', choices=['sample', 'project', 'draw', 'interpolate'])
     parser.add_argument('--latent', type=str, default='z', choices=['z', 'w', 'w+'])
     parser.add_argument('--n_iters', type=int, default=1000, help="number of optimization steps in the image projection")
+    parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2','nnl','bce','hinge'])
     parser.add_argument('--perc_wgt', type=float, default=0.01, help="perc loss weight")
     parser.add_argument('--l1_wgt', type=float, default=10., help="L1 pixel loss weight")
+    parser.add_argument('--l2_wgt', type=float, default=10., help="L2 pixel loss weight")
+    parser.add_argument('--nnl_wgt', type=float, default=10., help="NNL pixel loss weight")
+    parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
+    parser.add_argument('--hinge_wgt', type=float, default=10., help="Hinge pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
     parser.add_argument('--input', type=str, default='data/cat/*.png', help="path to the input image")
     return parser.parse_args()
