@@ -85,21 +85,6 @@ class Normalization(nn.Module):
         return (img - self.mean) / self.std
 
 
-class ContentLoss(nn.Module):
-
-    def __init__(self, target, ):
-        super(ContentLoss, self).__init__()
-        # you need to `detach' the target content from the graph used to
-        # compute the gradient in the forward pass that made it so that we don't track
-        # those gradients anymore
-        self.target = target.detach()
-
-    def forward(self, input):
-        # this needs to be a passthrough where you save the appropriate loss value
-        self.loss = F.mse_loss(input, self.target)
-        return input
-
-
 class PerceptualLoss(nn.Module):
     def __init__(self, add_layer=['conv_5']):
         super().__init__()
@@ -150,8 +135,7 @@ class PerceptualLoss(nn.Module):
                 name = 'conv_{}'.format(i)
                 if name in self.add_layer:
                     # add content loss:
-                    content_loss = ContentLoss(target.detach())
-                    loss += content_loss(pred.detach())
+                    loss += F.mse_loss(pred, target.detach())
 
         return loss
 
@@ -234,18 +218,23 @@ def sample_noise(dim, device, latent, model, N=1, from_mean=False):
              Tensor on device in shape of (N, nw, dim) if latent == w+
     """
     # TODO (Part 1): Finish the function below according to the comment above
+    Nw = 10000
     if latent == 'z':
         vector = torch.randn(N, dim, device=device) if not from_mean else torch.zeros(N, dim, device=device)
     elif latent == 'w':
         if from_mean:
-            vector = None
+            vectors = np.random.randn(Nw, dim, device=device)
+            vectors = model.mapping(vectors, None)
+            vector = torch.mean(vectors, dim=0, keepdim=True)
         else:
-            vector = None
+            vector = model.mapping(torch.randn(N, dim, device=device), None)
     elif latent == 'w+':
         if from_mean:
-            vector = None
+            vectors = [np.random.randn(N, dim, device=device) for _ in range(Nw)]
+            vectors = model.mapping(vectors, None)
+            vector = torch.mean(vectors, dim=0, keepdim=True)
         else:
-            vector = None
+            vector = model.mapping(torch.randn(N, dim, device=device), None)
     else:
         raise NotImplementedError('%s is not supported' % latent)
     return vector
