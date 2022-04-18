@@ -91,11 +91,42 @@ class PerceptualLoss(nn.Module):
         cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
         norm = Normalization(cnn_normalization_mean, cnn_normalization_std)
         cnn = vgg19(pretrained=True).features.to(device).eval()
-        
+
+        print(cnn)
         # TODO (Part 1): implement the Perceptual/Content loss
         #                hint: hw4
         # You may split the model into different parts and store each part in 'self.model'
         self.model = nn.ModuleList()
+        # i = 0
+        # for layer in cnn.children():
+        #     if isinstance(layer, nn.Conv2d):
+        #         i += 1
+        #         name = 'conv_{}'.format(i)
+        #     elif isinstance(layer, nn.ReLU):
+        #         name = 'relu_{}'.format(i)
+        #         layer = nn.ReLU(inplace=False)
+        #     elif isinstance(layer, nn.MaxPool2d):
+        #         name = 'pool_{}'.format(i)
+        #     elif isinstance(layer, nn.BatchNorm2d):
+        #         name = 'bn_{}'.format(i)
+        #     else:
+        #         raise RuntimeError('Unrecognized layer: {}'.format(layer.__class__.__name__))
+        #
+        #     self.model.add_module(name, layer)
+        #
+        #     if name in content_layers:
+        #         # add content loss:
+        #         target = model(content_img).detach()
+        #         content_loss = ContentLoss(target)
+        #         model.add_module("content_loss_{}".format(i), content_loss)
+        #         content_losses.append(content_loss)
+        #
+        # # now we trim off the layers after the last content and style losses
+        # for i in range(len(model) - 1, -1, -1):
+        #     if isinstance(model[i], ContentLoss) or isinstance(model[i], StyleLoss):
+        #         break
+        #
+        # model = model[:(i + 1)]
 
     def forward(self, pred, target):
 
@@ -316,6 +347,7 @@ def interpolate(args):
         with torch.no_grad():
             # TODO (Part 2): interpolation code
             #                hint: Write a for loop to append the convex combinations to image_list
+            image_list.append(dst) #change dst
         save_gifs(image_list, 'output/interpolate/%d_%s_%s' % (idx, args.model, args.latent))
         if idx >= 3:
             break
@@ -328,7 +360,7 @@ def parse_arg():
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--model', type=str, default='stylegan', choices=['vanilla', 'stylegan'])
-    parser.add_argument('--mode', type=str, default='sample', choices=['sample', 'project', 'draw', 'interpolate'])
+    parser.add_argument('--mode', type=str, default='project', choices=['sample', 'project', 'draw', 'interpolate'])
     parser.add_argument('--latent', type=str, default='z', choices=['z', 'w', 'w+'])
     parser.add_argument('--n_iters', type=int, default=1000, help="number of optimization steps in the image projection")
     parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2','nnl','bce','hinge'])
