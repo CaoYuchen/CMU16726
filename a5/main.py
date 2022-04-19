@@ -18,6 +18,7 @@ import torchvision.utils as vutils
 from torchvision.models import vgg19
 
 from dataloader import get_data_loader
+import time
 
 
 def build_model(name):
@@ -300,14 +301,17 @@ def project(args):
     print('model {} loaded'.format(args.model))
     criterion = Criterion(args)
     # project each image
+    start = time.time()
     for idx, (data, _) in enumerate(loader):
         target = data.to(device)
         save_images(data, 'output/project/%d_data' % idx, 1)
         param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
         optimize_para(wrapper, param, target, criterion, args.n_iters,
-                      'output/project/%d_%s_%s_%g_%s' % (idx, args.model, args.latent, args.perc_wgt,suffix_mean(args.use_mean)))
+                      'output/project/%d_%s_%s_%g_%s' % (
+                      idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
         if idx >= 0:
             break
+    print(f"Runtime of the program is {time.time() - start}")
 
 
 def draw(args):
@@ -324,7 +328,12 @@ def draw(args):
         save_images(mask, 'output/draw/%d_mask' % idx, 1)
         # TODO (Part 3): optimize sketch 2 image
         #                hint: Set from_mean=True when sampling noise vector
-
+        param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
+        optimize_para(wrapper, param, rgb, criterion, args.n_iters,
+                      'output/project/%d_%s_%s_%g_%s' % (
+                      idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
+        if idx >= 0:
+            break
 
 def interpolate(args):
     model, z_dim = build_model(args.model)
@@ -338,7 +347,8 @@ def interpolate(args):
         target = image.to(device)
         param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
         param, recon = optimize_para(wrapper, param, target, criterion, args.n_iters)
-        save_images(recon, 'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent,suffix_mean(args.use_mean)))
+        save_images(recon,
+                    'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent, suffix_mean(args.use_mean)))
         if idx % 2 == 0:
             src = param
             continue
@@ -348,8 +358,10 @@ def interpolate(args):
         with torch.no_grad():
             # TODO (Part 2): interpolation code
             #                hint: Write a for loop to append the convex combinations to image_list
-            image_list.append(dst)  # change dst
-        save_gifs(image_list, 'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent,suffix_mean(args.use_mean)))
+            for theta in alpha_list:
+                inter_frame = wrapper(theta * src + (1 - theta) * dst)
+                image_list.append(inter_frame)  # change dst
+        save_gifs(image_list,'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent, suffix_mean(args.use_mean)))
         if idx >= 3:
             break
     return
@@ -368,15 +380,15 @@ def parse_arg():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model', type=str, default='stylegan', choices=['vanilla', 'stylegan'])
-    parser.add_argument('--mode', type=str, default='project', choices=['sample', 'project', 'draw', 'interpolate'])
+    parser.add_argument('--mode', type=str, default='draw', choices=['sample', 'project', 'draw', 'interpolate'])
     parser.add_argument('--use_mean', type=bool, default=True)
-    parser.add_argument('--latent', type=str, default='w', choices=['z', 'w', 'w+'])
+    parser.add_argument('--latent', type=str, default='w+', choices=['z', 'w', 'w+'])
     parser.add_argument('--n_iters', type=int, default=1000,
                         help="number of optimization steps in the image projection")
     parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'bce'])
-    parser.add_argument('--perc_wgt', type=float, default=0.01, help="perc loss weight")
-    parser.add_argument('--l1_wgt', type=float, default=10., help="L1 pixel loss weight")
-    parser.add_argument('--l2_wgt', type=float, default=10., help="L2 pixel loss weight")
+    parser.add_argument('--perc_wgt', type=float, default=0.1, help="perc loss weight")
+    parser.add_argument('--l1_wgt', type=float, default=0.9, help="L1 pixel loss weight")
+    parser.add_argument('--l2_wgt', type=float, default=0.9, help="L2 pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
     parser.add_argument('--input', type=str, default='data/cat/*.png', help="path to the input image")
