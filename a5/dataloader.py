@@ -26,7 +26,7 @@ class CustomDataSet(Dataset):
         self.load_alpha = load_alpha
         self.total_imgs =  glob.glob(main_dir)
         self.total_imgs = sorted(self.total_imgs)
-        print(len(self))
+        # print(len(self))
 
     def __len__(self):
         return len(self.total_imgs)

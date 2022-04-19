@@ -77,8 +77,8 @@ class Normalization(nn.Module):
         # .view the mean and std to make them [C x 1 x 1] so that they can
         # directly work with image Tensor of shape [B x C x H x W].
         # B is batch size. C is number of channels. H is height and W is width.
-        self.mean = torch.tensor(mean).view(-1, 1, 1)
-        self.std = torch.tensor(std).view(-1, 1, 1)
+        self.mean = mean.clone().detach().view(-1, 1, 1)
+        self.std = std.clone().detach().view(-1, 1, 1)
 
     def forward(self, img):
         # normalize img
@@ -119,6 +119,7 @@ class PerceptualLoss(nn.Module):
             target, mask = target
 
         loss = 0.
+        i = 0
         for net in self.model:
             pred = net(pred)
             target = net(target)
@@ -129,7 +130,6 @@ class PerceptualLoss(nn.Module):
             # TODO (Part 3): if mask is not None, then you should mask out the gradient
             #                based on 'mask==0'. You may use F.adaptive_avg_pool2d() to 
             #                resize the mask such that it has the same shape as the feature map.
-            i = 0
             if isinstance(net, nn.Conv2d):
                 i += 1
                 name = 'conv_{}'.format(i)
@@ -146,7 +146,6 @@ class Criterion(nn.Module):
         self.perc_wgt = args.perc_wgt
         self.l1_wgt = args.l1_wgt  # weight for l1 loss/mask loss
         self.l2_wgt = args.l2_wgt
-        self.nll_wgt = args.nll_wgt
         self.bce_wgt = args.bce_wgt
         self.loss_type = args.loss_type
         self.mask = mask
@@ -162,14 +161,11 @@ class Criterion(nn.Module):
         else:
             # TODO (Part 1): loss w/o mask
             if self.loss_type == "l1":
-                lp_loss = self.l1_wgt * torch.linalg.norm(target - pred, ord=1)
+                lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
             elif self.loss_type == "l2":
-                lp_loss = self.l2_wgt * torch.linalg.norm(target - pred)
-            elif self.loss_type == "nll":
-                nll = nn.NLLLoss()
-                lp_loss = self.nll_wgt * nll(pred, target)
+                lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target - pred))
             elif self.loss_type == "bce":
-                bce = nn.BCELoss()
+                bce = nn.BCELoss(reduction='none')
                 lp_loss = self.bce_wgt * bce(pred, target)
             else:
                 raise NotImplementedError('%s is not supported' % self.loss_type)
@@ -223,18 +219,20 @@ def sample_noise(dim, device, latent, model, N=1, from_mean=False):
         vector = torch.randn(N, dim, device=device) if not from_mean else torch.zeros(N, dim, device=device)
     elif latent == 'w':
         if from_mean:
+            vector = np.random.randn(Nw, dim, device=device)
+            vector = model.mapping(vector, None)
+            vector = torch.mean(vector, dim=0, keepdim=True)
+            vector = vector[:, 0, :]
+        else:
+            vector = model.mapping(torch.randn(Nw, dim, device=device), None)
+            vector = vector[:, 0, :]
+    elif latent == 'w+':
+        if from_mean:
             vectors = np.random.randn(Nw, dim, device=device)
             vectors = model.mapping(vectors, None)
             vector = torch.mean(vectors, dim=0, keepdim=True)
         else:
-            vector = model.mapping(torch.randn(N, dim, device=device), None)
-    elif latent == 'w+':
-        if from_mean:
-            vectors = [np.random.randn(N, dim, device=device) for _ in range(Nw)]
-            vectors = model.mapping(vectors, None)
-            vector = torch.mean(vectors, dim=0, keepdim=True)
-        else:
-            vector = model.mapping(torch.randn(N, dim, device=device), None)
+            vector = model.mapping(torch.randn(Nw, dim, device=device), None)
     else:
         raise NotImplementedError('%s is not supported' % latent)
     return vector
@@ -255,6 +253,10 @@ def optimize_para(wrapper, param, target, criterion, num_step, save_prefix=None,
     def closure():
         iter_count[0] += 1
         # TODO (Part 1): Your optimiztion code. Free free to try out SGD/Adam.
+        optimizer.zero_grad()
+        image = wrapper(param + delta)
+        loss = criterion(image, target)
+
         if iter_count[0] % 250 == 0:
             # visualization code
             print('iter count {} loss {:4f}'.format(iter_count, loss.item()))
@@ -363,11 +365,10 @@ def parse_arg():
     parser.add_argument('--latent', type=str, default='z', choices=['z', 'w', 'w+'])
     parser.add_argument('--n_iters', type=int, default=1000,
                         help="number of optimization steps in the image projection")
-    parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'nll', 'bce'])
+    parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'bce'])
     parser.add_argument('--perc_wgt', type=float, default=0.01, help="perc loss weight")
     parser.add_argument('--l1_wgt', type=float, default=10., help="L1 pixel loss weight")
     parser.add_argument('--l2_wgt', type=float, default=10., help="L2 pixel loss weight")
-    parser.add_argument('--nll_wgt', type=float, default=10., help="NLL pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
     parser.add_argument('--input', type=str, default='data/cat/*.png', help="path to the input image")
@@ -378,6 +379,7 @@ if __name__ == '__main__':
     args = parse_arg()
     if torch.cuda.is_available():
         device = 'cuda'
+        print('Models moved to GPU.')
     else:
         device = 'cpu'
     if args.mode == 'sample':
