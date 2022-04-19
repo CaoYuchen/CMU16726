@@ -219,20 +219,20 @@ def sample_noise(dim, device, latent, model, N=1, from_mean=False):
         vector = torch.randn(N, dim, device=device) if not from_mean else torch.zeros(N, dim, device=device)
     elif latent == 'w':
         if from_mean:
-            vector = np.random.randn(Nw, dim, device=device)
+            vector = torch.randn(Nw, dim, device=device)
             vector = model.mapping(vector, None)
             vector = torch.mean(vector, dim=0, keepdim=True)
             vector = vector[:, 0, :]
         else:
-            vector = model.mapping(torch.randn(Nw, dim, device=device), None)
+            vector = model.mapping(torch.randn(N, dim, device=device), None)
             vector = vector[:, 0, :]
     elif latent == 'w+':
         if from_mean:
-            vectors = np.random.randn(Nw, dim, device=device)
+            vectors = torch.randn(Nw, dim, device=device)
             vectors = model.mapping(vectors, None)
             vector = torch.mean(vectors, dim=0, keepdim=True)
         else:
-            vector = model.mapping(torch.randn(Nw, dim, device=device), None)
+            vector = model.mapping(torch.randn(N, dim, device=device), None)
     else:
         raise NotImplementedError('%s is not supported' % latent)
     return vector
@@ -283,7 +283,7 @@ def sample(args):
     else:
         device = 'cpu'
 
-    noise = sample_noise(z_dim, device, args.latent, model, batch_size)
+    noise = sample_noise(z_dim, device, args.latent, model, batch_size, args.use_mean)
     image = wrapper(noise)
     fname = os.path.join('output/forward/%s_%s' % (args.model, args.mode))
     os.makedirs(os.path.dirname(fname), exist_ok=True)
@@ -303,9 +303,9 @@ def project(args):
     for idx, (data, _) in enumerate(loader):
         target = data.to(device)
         save_images(data, 'output/project/%d_data' % idx, 1)
-        param = sample_noise(z_dim, device, args.latent, model)
+        param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
         optimize_para(wrapper, param, target, criterion, args.n_iters,
-                      'output/project/%d_%s_%s_%g' % (idx, args.model, args.latent, args.perc_wgt))
+                      'output/project/%d_%s_%s_%g_%s' % (idx, args.model, args.latent, args.perc_wgt,suffix_mean(args.use_mean)))
         if idx >= 0:
             break
 
@@ -336,9 +336,9 @@ def interpolate(args):
     for idx, (image, _) in enumerate(loader):
         save_images(image, 'output/interpolate/%d' % (idx))
         target = image.to(device)
-        param = sample_noise(z_dim, device, args.latent, model, from_mean=True)
+        param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
         param, recon = optimize_para(wrapper, param, target, criterion, args.n_iters)
-        save_images(recon, 'output/interpolate/%d_%s_%s' % (idx, args.model, args.latent))
+        save_images(recon, 'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent,suffix_mean(args.use_mean)))
         if idx % 2 == 0:
             src = param
             continue
@@ -349,10 +349,17 @@ def interpolate(args):
             # TODO (Part 2): interpolation code
             #                hint: Write a for loop to append the convex combinations to image_list
             image_list.append(dst)  # change dst
-        save_gifs(image_list, 'output/interpolate/%d_%s_%s' % (idx, args.model, args.latent))
+        save_gifs(image_list, 'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent,suffix_mean(args.use_mean)))
         if idx >= 3:
             break
     return
+
+
+def suffix_mean(use_mean):
+    if use_mean is True:
+        return "mean"
+    else:
+        return "no_mean"
 
 
 def parse_arg():
@@ -362,7 +369,8 @@ def parse_arg():
 
     parser.add_argument('--model', type=str, default='stylegan', choices=['vanilla', 'stylegan'])
     parser.add_argument('--mode', type=str, default='project', choices=['sample', 'project', 'draw', 'interpolate'])
-    parser.add_argument('--latent', type=str, default='z', choices=['z', 'w', 'w+'])
+    parser.add_argument('--use_mean', type=bool, default=True)
+    parser.add_argument('--latent', type=str, default='w', choices=['z', 'w', 'w+'])
     parser.add_argument('--n_iters', type=int, default=1000,
                         help="number of optimization steps in the image projection")
     parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'bce'])
