@@ -87,7 +87,7 @@ class Normalization(nn.Module):
 
 
 class PerceptualLoss(nn.Module):
-    def __init__(self, add_layer=['conv_5']):
+    def __init__(self, add_layer=['conv_3','conv_4']):
         super().__init__()
         cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
         cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
@@ -140,7 +140,10 @@ class PerceptualLoss(nn.Module):
                     # add content loss:
                     if is_mask:
                         mask = F.adaptive_avg_pool2d(mask, pred.shape[-2:])
-                        loss += F.mse_loss(torch.mul(pred, mask.detach()), torch.mul(target.detach(), mask.detach()))
+                        loss += F.mse_loss(torch.mul(pred, mask), torch.mul(target, mask).detach())
+                        # pred = torch.mul(pred, mask)
+                        # target = torch.mul(target, mask)
+                        # loss += F.mse_loss(pred, target.detach())
                     else:
                         loss += F.mse_loss(pred, target.detach())
         return loss
@@ -166,19 +169,20 @@ class Criterion(nn.Module):
             # mask = F.adaptive_avg_pool2d(mask, pred.shape[-2:])
             pred = torch.mul(pred, mask)
             target = torch.mul(target, mask)
-            loss = torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
+            # loss = torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
         else:
             # TODO (Part 1): loss w/o mask
-            if self.loss_type == "l1":
-                lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
-            elif self.loss_type == "l2":
-                lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target - pred))
-            elif self.loss_type == "bce":
-                bce = nn.BCELoss(reduction='none')
-                lp_loss = self.bce_wgt * bce(pred, target)
-            else:
-                raise NotImplementedError('%s is not supported' % self.loss_type)
-            loss = self.perc_wgt * self.perc(pred, target) + lp_loss
+            pass
+        if self.loss_type == "l1":
+            lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target.detach() - pred, ord=1))
+        elif self.loss_type == "l2":
+            lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target.detach() - pred))
+        elif self.loss_type == "bce":
+            bce = nn.BCELoss(reduction='none')
+            lp_loss = self.bce_wgt * bce(pred, target.detach())
+        else:
+            raise NotImplementedError('%s is not supported' % self.loss_type)
+        loss = self.perc_wgt * self.perc(pred, target) + lp_loss
         return loss
 
 
@@ -331,16 +335,17 @@ def draw(args):
     loader = get_data_loader(args.input, args.resolution, alpha=True)
     criterion = Criterion(args, True)
     for idx, (rgb, mask) in enumerate(loader):
-        rgb, mask = rgb.to(device), mask.to(device)
-        save_images(rgb, 'output/draw/%d_data' % idx, 1)
-        save_images(mask, 'output/draw/%d_mask' % idx, 1)
-        # TODO (Part 3): optimize sketch 2 image
-        #                hint: Set from_mean=True when sampling noise vector
-        param = sample_noise(z_dim, device, args.latent, model, from_mean=True)
-        optimize_para(wrapper, param, (rgb, mask), criterion, args.n_iters,
-                      'output/draw/%d_%s_%s_%g_%s' % (
-                          idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
-        if idx >= 2:
+        if idx == 0:
+            rgb, mask = rgb.to(device), mask.to(device)
+            save_images(rgb, 'output/draw/%d_data' % idx, 1)
+            save_images(mask, 'output/draw/%d_mask' % idx, 1)
+            # TODO (Part 3): optimize sketch 2 image
+            #                hint: Set from_mean=True when sampling noise vector
+            param = sample_noise(z_dim, device, args.latent, model, from_mean=True)
+            optimize_para(wrapper, param, (rgb, mask), criterion, args.n_iters,
+                          'output/draw/%d_%s_%s_%g_%s' % (
+                              idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
+        if idx >= 8:
             break
 
 
@@ -397,8 +402,8 @@ def parse_arg():
                         help="number of optimization steps in the image projection")
     parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'bce'])
     parser.add_argument('--perc_wgt', type=float, default=0.1, help="perc loss weight")
-    parser.add_argument('--l1_wgt', type=float, default=0.9, help="L1 pixel loss weight")
-    parser.add_argument('--l2_wgt', type=float, default=0.9, help="L2 pixel loss weight")
+    parser.add_argument('--l1_wgt', type=float, default=5, help="L1 pixel loss weight")
+    parser.add_argument('--l2_wgt', type=float, default=0.01, help="L2 pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
     parser.add_argument('--input', type=str, default='data/sketch/*.png', help="path to the input image")
