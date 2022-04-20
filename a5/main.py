@@ -115,9 +115,10 @@ class PerceptualLoss(nn.Module):
         # self.model = nn.Sequential(norm, *self.model)
 
     def forward(self, pred, target):
-
+        is_mask = False
         if isinstance(target, tuple):
             target, mask = target
+            is_mask = True
 
         loss = 0.
         i = 0
@@ -137,7 +138,7 @@ class PerceptualLoss(nn.Module):
                 name = 'conv_{}'.format(i)
                 if name in self.add_layer:
                     # add content loss:
-                    if isinstance(target, tuple):
+                    if is_mask:
                         mask = F.adaptive_avg_pool2d(mask, pred.shape[-2:])
                         loss += F.mse_loss(torch.mul(pred, mask.detach()), torch.mul(target.detach(), mask.detach()))
                     else:
@@ -165,19 +166,19 @@ class Criterion(nn.Module):
             # mask = F.adaptive_avg_pool2d(mask, pred.shape[-2:])
             pred = torch.mul(pred, mask)
             target = torch.mul(target, mask)
+            loss = torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
         else:
             # TODO (Part 1): loss w/o mask
-            pass
-        if self.loss_type == "l1":
-            lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
-        elif self.loss_type == "l2":
-            lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target - pred))
-        elif self.loss_type == "bce":
-            bce = nn.BCELoss(reduction='none')
-            lp_loss = self.bce_wgt * bce(pred, target)
-        else:
-            raise NotImplementedError('%s is not supported' % self.loss_type)
-        loss = self.perc_wgt * self.perc(pred, target) + lp_loss
+            if self.loss_type == "l1":
+                lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
+            elif self.loss_type == "l2":
+                lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target - pred))
+            elif self.loss_type == "bce":
+                bce = nn.BCELoss(reduction='none')
+                lp_loss = self.bce_wgt * bce(pred, target)
+            else:
+                raise NotImplementedError('%s is not supported' % self.loss_type)
+            loss = self.perc_wgt * self.perc(pred, target) + lp_loss
         return loss
 
 
@@ -339,7 +340,7 @@ def draw(args):
         optimize_para(wrapper, param, (rgb, mask), criterion, args.n_iters,
                       'output/draw/%d_%s_%s_%g_%s' % (
                           idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
-        if idx >= 0:
+        if idx >= 2:
             break
 
 
@@ -395,7 +396,7 @@ def parse_arg():
     parser.add_argument('--n_iters', type=int, default=1000,
                         help="number of optimization steps in the image projection")
     parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'bce'])
-    parser.add_argument('--perc_wgt', type=float, default=0.7, help="perc loss weight")
+    parser.add_argument('--perc_wgt', type=float, default=0.1, help="perc loss weight")
     parser.add_argument('--l1_wgt', type=float, default=0.9, help="L1 pixel loss weight")
     parser.add_argument('--l2_wgt', type=float, default=0.9, help="L2 pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
