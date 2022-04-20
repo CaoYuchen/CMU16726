@@ -75,10 +75,10 @@ Webiste: 16726 course website
                     <a class="nav-link" id="a3-tab" data-toggle="tab" href="#a3" role="tab" aria-controls="a3" aria-selected="true">Assignment3</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" id="a4-tab" data-toggle="tab" href="#a4" role="tab" aria-controls="a4" aria-selected="false">Assignment4</a>
+                    <a class="nav-link" id="a4-tab" data-toggle="tab" href="#a4" role="tab" aria-controls="a4" aria-selected="false">Assignment4</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="a5-tab" data-toggle="tab" href="#a5" role="tab" aria-controls="a5" aria-selected="false">Assignment5</a>
+                    <a class="nav-link active" id="a5-tab" data-toggle="tab" href="#a5" role="tab" aria-controls="a5" aria-selected="false">Assignment5</a>
                 </li>
             </ul>
         </div>
@@ -638,7 +638,7 @@ Webiste: 16726 course website
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade  show active" id="a4" role="tabpanel" aria-labelledby="a4-tab">
+            <div class="tab-pane fade" id="a4" role="tabpanel" aria-labelledby="a4-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>Assignment #4</h2>
@@ -890,16 +890,58 @@ Webiste: 16726 course website
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="a5" role="tabpanel" aria-labelledby="a5-tab">
+            <div class="tab-pane fade show active" id="a5" role="tabpanel" aria-labelledby="a5-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>Assignment #5</h2>
                         <hr class="col-xs-12 mr-4">
-                        <p class="col-xs-12 mr-4">Lorem ipsum dolor sit amet, no eum reque putent scripta. Eos esse vidit nonumy eu. Sit ut nominati prodesset, affert consul expetendis et cum. Sea cu animal cotidieque. Ei qui affert voluptua hendrerit, eripuit menandri pericula et per. Eam cu iusto possim vocent, veri mazim sensibus ea has, salutandi periculis his eu. Mei tractatos sententiae no.
-                            Eu vim eirmod molestie electram, eam ad dicunt facilisi conclusionemque, at nostrud delectus incorrupte mea. Vel ea liber munere maluisset, cu habeo cotidieque vel, blandit indoctum ei vel. Sit invidunt erroribus ne. Ea postea possit persecuti qui, tota dicit discere ut usu. Mei te iudicabit repudiare. Legere tritani definitiones vix ei, mea ea eros singulis.
-                            Qui ne posidonium definitionem, maluisset repudiare appellantur eam et, vim et vivendum facilisi delicatissimi. Ius ei choro dictas. Sit in atqui antiopam, ut his iuvaret oportere sapientem. Solet equidem recteque eum at, nam mundi perpetua te.
-                            Eum te semper appareat omittantur. Labitur perpetua ea mea, nam ea impetus partiendo. Elitr perfecto adipisci ut eum, his vocibus tincidunt incorrupte et. Ad duo putant tractatos. Sint case qualisque vis cu, soluta percipitur eu eam, cum inermis definitionem cu. Ne summo democritum pri, et falli ludus eruditi nam.
-                            Per assum mucius ex, no nec petentium delicatissimi, et pri hinc tacimates similique. Purto prima omnes vel ad, eu feugiat nostrum eum, ut has idque laoreet periculis. Ad vel officiis lucilius accusata, nonumy volutpat te qui. Noster indoctum mediocritatem ne cum.</p>
+                        <h3>Introduction</h3>
+                        <p class="col-xs-12 mr-4">
+                            In this assignment, we implement a few different techniques that require you to manipulate images on the manifold of natural images. First, we invert a pre-trained generator to find a latent variable that closely reconstructs the given real image. In the second part of the assignment, we take a hand-drawn sketch and generate an image that fits the sketch accordingly.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+
+                        <h3>Part I: Inverting the Generator</h3>
+                        <p class="col-xs-12 mr-4">
+                            For the first part of the assignment, we mainly want to solve an optimization problem to reconstruct the image from a particular latent code. And the loss function consists of two parts: pixel-wise generated image and target(source) image's Lp loss; latent space level of content feature MSE loss. To expand it, we want to optimize the difference between image from StyleGAN2's generator and target image to get the better z input, here I test L1 and L2 loss; and at the same time we want to minimize the distance of manifold content feature between target and the z input, which in our case, we feed them to a VGG-19's feature layers, and get compute the loss of conv_3 and conv_4's output.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            StyleGAN2 has one remarkable feature to mapping Gaussian distribution of z into w or w+ by the mapping layers so that the noise has a better distribution to fit the model. For comparison of different generator, we experiment with both DCGAN and StyleGAN. Also, for noise sampling, we want to test the influence of distribution of the noise, we test with and without mean normalization, for mean we use N=10000 samples. And for the optimization, I use LBFGS. A group of Ablation experiment is listed below:
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+
+                        <h3>Part II: Interpolate your Cats</h3>
+                        <p class="col-xs-12 mr-4">
+                            For Interpolation, given images \(x_1\) and \(x_2\), compute \(z_1 = G^{-1}(x_1), z_2 = G^{-1}(x_2)\). Then we can combine the latent images for some \(\theta \in (0, 1)\) by \(z’ = \theta z_1 + (1 - \theta) z_2\) and generate it via \(x’ = G(z’)\).
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            The examples of interpolated gif image are shown below:
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+
+                        <h3>Part III: Scribble to Image</h3>
+                        <p class="col-xs-12 mr-4">
+                            
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            The examples of interpolated gif image are shown below:
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+
+                        <h3>Bells & Whistles (Extra Points)</h3>
+                        <p class="col-xs-12 mr-4">
+                            <b>High Resolution Cat Dataset</b>
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            We used the dataset from <a href="https://drive.google.com/file/d/1p9SlAZ_lwtewEM-UU6GvYEdQWTV1K-_g/view">256/128 Resolution Cat Dataset</a>, and generated images like below:
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            <b>AdaWild Dataset</b>
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            Also, I tried <a href="https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/images/generated-afhqwild/">AdaWild Dataset</a> and got results as below:
+                        </p>
+                        <hr class="col-xs-12 mr-4">
                     </div>
                 </div>
             </div>
