@@ -131,13 +131,17 @@ class PerceptualLoss(nn.Module):
             # TODO (Part 3): if mask is not None, then you should mask out the gradient
             #                based on 'mask==0'. You may use F.adaptive_avg_pool2d() to 
             #                resize the mask such that it has the same shape as the feature map.
+
             if isinstance(net, nn.Conv2d):
                 i += 1
                 name = 'conv_{}'.format(i)
                 if name in self.add_layer:
                     # add content loss:
-                    loss += F.mse_loss(pred, target.detach())
-
+                    if isinstance(target, tuple):
+                        mask = F.adaptive_avg_pool2d(mask, pred.shape[-2:])
+                        loss += F.mse_loss(torch.mul(pred, mask.detach()), torch.mul(target.detach(), mask.detach()))
+                    else:
+                        loss += F.mse_loss(pred, target.detach())
         return loss
 
 
@@ -158,19 +162,22 @@ class Criterion(nn.Module):
         if self.mask:
             target, mask = target
             # TODO (Part 3): loss with mask
-            pass
+            # mask = F.adaptive_avg_pool2d(mask, pred.shape[-2:])
+            pred = torch.mul(pred, mask)
+            target = torch.mul(target, mask)
         else:
             # TODO (Part 1): loss w/o mask
-            if self.loss_type == "l1":
-                lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
-            elif self.loss_type == "l2":
-                lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target - pred))
-            elif self.loss_type == "bce":
-                bce = nn.BCELoss(reduction='none')
-                lp_loss = self.bce_wgt * bce(pred, target)
-            else:
-                raise NotImplementedError('%s is not supported' % self.loss_type)
-            loss = self.perc_wgt * self.perc(pred, target) + lp_loss
+            pass
+        if self.loss_type == "l1":
+            lp_loss = self.l1_wgt * torch.mean(torch.linalg.matrix_norm(target - pred, ord=1))
+        elif self.loss_type == "l2":
+            lp_loss = self.l2_wgt * torch.mean(torch.linalg.matrix_norm(target - pred))
+        elif self.loss_type == "bce":
+            bce = nn.BCELoss(reduction='none')
+            lp_loss = self.bce_wgt * bce(pred, target)
+        else:
+            raise NotImplementedError('%s is not supported' % self.loss_type)
+        loss = self.perc_wgt * self.perc(pred, target) + lp_loss
         return loss
 
 
@@ -308,7 +315,7 @@ def project(args):
         param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
         optimize_para(wrapper, param, target, criterion, args.n_iters,
                       'output/project/%d_%s_%s_%g_%s' % (
-                      idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
+                          idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
         if idx >= 0:
             break
     print(f"Runtime of the program is {time.time() - start}")
@@ -328,12 +335,13 @@ def draw(args):
         save_images(mask, 'output/draw/%d_mask' % idx, 1)
         # TODO (Part 3): optimize sketch 2 image
         #                hint: Set from_mean=True when sampling noise vector
-        param = sample_noise(z_dim, device, args.latent, model, from_mean=args.use_mean)
-        optimize_para(wrapper, param, rgb, criterion, args.n_iters,
-                      'output/project/%d_%s_%s_%g_%s' % (
-                      idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
+        param = sample_noise(z_dim, device, args.latent, model, from_mean=True)
+        optimize_para(wrapper, param, (rgb, mask), criterion, args.n_iters,
+                      'output/draw/%d_%s_%s_%g_%s' % (
+                          idx, args.model, args.latent, args.perc_wgt, suffix_mean(args.use_mean)))
         if idx >= 0:
             break
+
 
 def interpolate(args):
     model, z_dim = build_model(args.model)
@@ -361,7 +369,8 @@ def interpolate(args):
             for theta in alpha_list:
                 inter_frame = wrapper(theta * src + (1 - theta) * dst)
                 image_list.append(inter_frame)  # change dst
-        save_gifs(image_list,'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent, suffix_mean(args.use_mean)))
+        save_gifs(image_list,
+                  'output/interpolate/%d_%s_%s_%s' % (idx, args.model, args.latent, suffix_mean(args.use_mean)))
         if idx >= 3:
             break
     return
@@ -386,12 +395,12 @@ def parse_arg():
     parser.add_argument('--n_iters', type=int, default=1000,
                         help="number of optimization steps in the image projection")
     parser.add_argument('--loss_type', type=str, default='l1', choices=['l1', 'l2', 'bce'])
-    parser.add_argument('--perc_wgt', type=float, default=0.1, help="perc loss weight")
+    parser.add_argument('--perc_wgt', type=float, default=0.7, help="perc loss weight")
     parser.add_argument('--l1_wgt', type=float, default=0.9, help="L1 pixel loss weight")
     parser.add_argument('--l2_wgt', type=float, default=0.9, help="L2 pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
-    parser.add_argument('--input', type=str, default='data/cat/*.png', help="path to the input image")
+    parser.add_argument('--input', type=str, default='data/sketch/*.png', help="path to the input image")
     return parser.parse_args()
 
 
