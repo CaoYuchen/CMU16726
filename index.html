@@ -139,14 +139,17 @@ Webiste: 16726 course website
                                             <tr>
                                                 <th scope="row">A4</th>
                                                 <td>Neural Style Transfer</td>
-                                                <td></td>
+                                                <td>Vgg-19, style transfer</td>
                                                 <td></td>
                                             </tr>
                                             <tr>
                                                 <th scope="row">A5</th>
                                                 <td>GAN Photo Editing</td>
-                                                <td></td>
-                                                <td></td>
+                                                <td>Inverted GAN, StyleGAN2, Interpolation, Sketch2Image</td>
+                                                <td>
+                                                    <a class="underline" href="https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/images/generated-afhqwild/" target="_blank">AdaWild Dataset</a><br>
+                                                    <a class="underline" href="https://drive.google.com/file/d/1p9SlAZ_lwtewEM-UU6GvYEdQWTV1K-_g/view" target="_blank">256/128 Resolution Cat Dataset</a>
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -884,7 +887,7 @@ Webiste: 16726 course website
                         <hr class="col-xs-12 mr-4">
                         <h3>Introduction</h3>
                         <p class="col-xs-12 mr-4">
-                            In this assignment, we implement a few different techniques that require you to manipulate images on the manifold of natural images. First, we invert a pre-trained generator to find a latent variable that closely reconstructs the given real image. In the second part of the assignment, we take a hand-drawn sketch and generate an image that fits the sketch accordingly.
+                            In this assignment, we implement a few different techniques to manipulate images on the manifold of natural images. First, we invert a pre-trained generator to find a latent variable that closely reconstructs the given real image. In the second part of the assignment, we take a hand-drawn sketch and generate an image that fits the sketch accordingly.
                         </p>
                         <hr class="col-xs-12 mr-4">
                         <h3>Part I: Inverting the Generator</h3>
