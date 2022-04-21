@@ -335,7 +335,7 @@ def draw(args):
     loader = get_data_loader(args.input, args.resolution, alpha=True)
     criterion = Criterion(args, True)
     for idx, (rgb, mask) in enumerate(loader):
-        if idx >= 0:
+        if idx == 3:
             rgb, mask = rgb.to(device), mask.to(device)
             save_images(rgb, 'output/draw/%d_data' % idx, 1)
             save_images(mask, 'output/draw/%d_mask' % idx, 1)
@@ -395,7 +395,7 @@ def parse_arg():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model', type=str, default='stylegan', choices=['vanilla', 'stylegan'])
-    parser.add_argument('--mode', type=str, default='project', choices=['sample', 'project', 'draw', 'interpolate'])
+    parser.add_argument('--mode', type=str, default='draw', choices=['sample', 'project', 'draw', 'interpolate'])
     parser.add_argument('--use_mean', type=bool, default=True)
     parser.add_argument('--latent', type=str, default='w+', choices=['z', 'w', 'w+'])
     parser.add_argument('--n_iters', type=int, default=1000,
@@ -406,7 +406,7 @@ def parse_arg():
     parser.add_argument('--l2_wgt', type=float, default=5, help="L2 pixel loss weight")
     parser.add_argument('--bce_wgt', type=float, default=10., help="BCE pixel loss weight")
     parser.add_argument('--resolution', type=int, default=64, help='Resolution of images')
-    parser.add_argument('--input', type=str, default='data/cat/*.png', help="path to the input image")
+    parser.add_argument('--input', type=str, default='data/sketch/*.png', help="path to the input image")
     return parser.parse_args()
 
 

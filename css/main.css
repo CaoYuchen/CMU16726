@@ -74,6 +74,15 @@ p {
   	padding-left:8em;
 }*/
 
+.images {
+    display: flex;
+    justify-content: center;
+}
+
+figure {
+    text-align: center;
+}
+
 
 @media screen and (min-width:375px) {
     #title-top {

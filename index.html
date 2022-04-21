@@ -49,7 +49,7 @@ Webiste: 16726 course website
 <body>
     <div style="width:100%;height:100%">
         <!-- title -->
-        <div  id="cloud">
+        <div id="cloud">
             <div class="row">
                 <div class="col-12 mx-12">
                     <div id="title" class="text-center">
@@ -299,9 +299,9 @@ Webiste: 16726 course website
                         </p>
                         <p class="col-xs-12 mr-4">
                             <b>
-                            ((v(x+1,y)−v(x,y))−(s(x+1,y)−s(x,y)))**2<br>
-                            ((v(x,y+1)−v(x,y))−(s(x,y+1)−s(x,y)))**2<br>
-                             (v(1,1)−s(1,1))**2
+                                ((v(x+1,y)−v(x,y))−(s(x+1,y)−s(x,y)))**2<br>
+                                ((v(x,y+1)−v(x,y))−(s(x,y+1)−s(x,y)))**2<br>
+                                (v(1,1)−s(1,1))**2
                             </b>
                         </p>
                         <p class="col-xs-12 mr-4">
@@ -421,7 +421,6 @@ Webiste: 16726 course website
                         </p>
                         <hr class="col-xs-12 mr-4">
                         <h3>Part I: Deep Convulotional GAN</h3>
-
                         <p class="col-xs-12 mr-4"><b>Implement Data Augmentation</b></p>
                         <p class="col-xs-12 mr-4">
                             In Pytorch, data augmentation is invoked each time when iterated through the mini-batch, the purpose of the data augmentation is add variance to the dataset, which is especially useful when the dataset is small or each sample of the data are too similar. For example, in this DCGAN training, we only have 204 images as dataset. I mainly use the Resize + RandomCrop, RandomHorizontalFlip, RandomRotation(10 angles) to generate augmentation. The example of orignal dataset and augmented dataset, and GAN generated sample by different dataset can be see here:
@@ -434,7 +433,6 @@ Webiste: 16726 course website
                                 <img src="./media/a3/real-deluxe-diff.png" height="300px">
                             </div>
                         </div>
-                        
                         <p class="col-xs-12 mr-4"><b>The Discriminator</b></p>
                         <p class="col-xs-12 mr-4">
                             The discriminator in this DCGAN is a convolutional neural network with the following architecture:
@@ -448,7 +446,6 @@ Webiste: 16726 course website
                             According to the formula <b>(N-F+2P)/S + 1 = M</b>(We don't consider dilation here), where <b>N</b> is the input number of channels, <b>M</b> is the output number of channels, <b>S</b> is stride, <b>P</b> is padding, <b>F</b> is size of filter/kernel, since we want <b>N=2M</b>, and we use filter size of 4, stride of 2, we can calculate that padding <b>P</b> is 1.
                             Besides, I use softmax for the output layer, and later on squared mean difference for loss function, since this Discriminator is a classification problem, the softmax-loss combination is a generally good choice.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The Generator</b></p>
                         <p class="col-xs-12 mr-4">
                             The generator in this DCGAN is a convolutional neural network with the following architecture:
@@ -459,9 +456,8 @@ Webiste: 16726 course website
                             </div>
                         </div>
                         <p class="col-xs-12 mr-4">
-                            In the generator neural network, I use transposed convolution with a filter, size of 4, stride of 1 and padding of 0 for the very first layer that from 100x1x1 input to 256x4x4 output. And the rest layer all are upsampling of 2, with a filter, size of 3, stride of 1 and padding of 1 to satisfy the condition that output dimension is the 2 times of input dimension. And the reason why the first layer is a transposed convolution is that it has better performance than direct upsampling for noise. 
+                            In the generator neural network, I use transposed convolution with a filter, size of 4, stride of 1 and padding of 0 for the very first layer that from 100x1x1 input to 256x4x4 output. And the rest layer all are upsampling of 2, with a filter, size of 3, stride of 1 and padding of 1 to satisfy the condition that output dimension is the 2 times of input dimension. And the reason why the first layer is a transposed convolution is that it has better performance than direct upsampling for noise.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The Training Loop</b></p>
                         <p class="col-xs-12 mr-4">
                             The training loop including loss function and backpropagation is as straight forward as image below:
@@ -472,12 +468,11 @@ Webiste: 16726 course website
                             </div>
                         </div>
                         <p class="col-xs-12 mr-4">
-                            One thing to notice is that we normally first do the back propagation to update the gradients and weights of discriminator, then do the generator, this is because the loss function first goes back to discriminator then to the generator. To better train generator's weight, we prefer the gradient and weights of discriminator is static than dynamic. 
+                            One thing to notice is that we normally first do the back propagation to update the gradients and weights of discriminator, then do the generator, this is because the loss function first goes back to discriminator then to the generator. To better train generator's weight, we prefer the gradient and weights of discriminator is static than dynamic.
                         </p>
                         <p class="col-xs-12 mr-4">
                             Similarly, when training the discriminator, we don't want to update the gradient all the way back to generator, therefore we have to set no_grad_up for the fake_image that is generated from generator and fed to discriminator. In my case, I use torch.detach() function.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The Differentiable Augmentation</b></p>
                         <p class="col-xs-12 mr-4">
                             The Differentiable Augmentation method is meant to process data during the training process, it can slow down the training but can significantly improve the output's performance. And it's shown as below:
@@ -490,12 +485,10 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             I apply differentiable augmentation to all the generator generated fake images and real images during the training process.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>Results</b></p>
                         <p class="col-xs-12 mr-4">
                             After the training with learning rate = 0.0002, beta1 = 0.5, beta2 = 0.999, epoch = 500, batch_size = 16, I get the results as below. From left to right, they are generated image with basic data augmentation, with basic and differentiable data augmentation, with deluxe data augmentation, and with deluxe and differentiable data augmentation.
                         </p>
-
                         <div class="row mr-2">
                             <div class="text-center col-12">
                                 <img src="./media/a3/basic.png" height="300px">
@@ -510,7 +503,6 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             Similarly to the order above, I also draw the loss curve along with every 200 iteration as below:
                         </p>
-
                         <div class="row mr-2">
                             <div class="text-center col-12">
                                 <img src="./media/a3/loss_basic.png" height="250px">
@@ -523,7 +515,6 @@ Webiste: 16726 course website
                             From the loss curve, we can tell that the base and deluxe both have the trend to overfitting after the training, though dexule has a relatively better loss(where G and D both are close to 0.5), and with the help of differentiable augmentation, the loss is more close to the ideal value, which means the network has a better robust performance on general data.
                         </p>
                         <hr class="col-xs-12 mr-4">
-
                         <h3>Part II: CycleGAN</h3>
                         <p class="col-xs-12 mr-4"><b>The Dual Generator</b></p>
                         <p class="col-xs-12 mr-4">
@@ -537,12 +528,10 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             In the generator neural network, there are two generator for X->Y and Y->X, they are symmetric in input and output, and their architecture are identical in this project. The filter size is the same as in DCGAN, refer to them in convolution and upconvolution layer respectively. And one major difference is the ResnetBlock, which is used 3 times here, which aims to make sure characteristics of the output image (e.g., the shapes of objects) do not differ too much from the input. One major difference of this generator from the one of DCGAN is that its input is not noise anymore but an image.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The PatchDiscriminator</b></p>
                         <p class="col-xs-12 mr-4">
                             A major difference of this PatchDiscriminator from the Discriminator of DCGAN is that its output is a 4x4 patch instead of a loss value, which means the output layer doesn't require a softmax function anymore, and the rest are pretty much the same.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The Training Loop</b></p>
                         <p class="col-xs-12 mr-4">
                             The training loop including loss function and backpropagation is as straight forward as image below:
@@ -555,15 +544,13 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             The major loss function and pipeline are similar to DCGAN, except for that for generator, since we have two generators, and we want to train them at the same time, so we add both X->Y and Y->X loss here; And for the discriminator, it goes the same way to train the loss from fake images generated from X->Y and Y->X.
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The Cycle Consistency</b></p>
                         <p class="col-xs-12 mr-4">
-                            The cycle consistency is like the soul part of the CycleGAN from my own experience of experiment, it aims to 
+                            The cycle consistency is like the soul part of the CycleGAN from my own experience of experiment, it aims to
                         </p>
-
                         <p class="col-xs-12 mr-4"><b>The CycleGAN Experiments</b></p>
                         <p class="col-xs-12 mr-4">
-                            My training for CycleGAN follows the learning rate = 0.0002, beta1 = 0.5, beta2 = 0.999, batch_size = 16 same as DCGAN, and I always use the Differentiable Augmentation since it helps increase robustness towards the RGB intensity and other factors. I first start by testing the CycleGAN with epoch = 1000, with and without cycle consistency, and the results are(Left side are without cycle, right side are with cycle; up side are X->Y, down side are Y->X): 
+                            My training for CycleGAN follows the learning rate = 0.0002, beta1 = 0.5, beta2 = 0.999, batch_size = 16 same as DCGAN, and I always use the Differentiable Augmentation since it helps increase robustness towards the RGB intensity and other factors. I first start by testing the CycleGAN with epoch = 1000, with and without cycle consistency, and the results are(Left side are without cycle, right side are with cycle; up side are X->Y, down side are Y->X):
                         </p>
                         <div class="row mr-2">
                             <div class="text-center col-12">
@@ -690,7 +677,7 @@ Webiste: 16726 course website
                         <hr class="col-xs-12 mr-4">
                         <h3>Part 2: Texture Synthesis</h3>
                         <p class="col-xs-12 mr-4">
-                            Style synthesis is pretty much the same as content structure, except for that the output of vgg-19 is processed with gram_matrix and then calculated the MSE loss. Similarly, I first try different single layer with picasso.jpeg: 
+                            Style synthesis is pretty much the same as content structure, except for that the output of vgg-19 is processed with gram_matrix and then calculated the MSE loss. Similarly, I first try different single layer with picasso.jpeg:
                         </p>
                         <div class="row mr-2">
                             <div class="text-center col-12">
@@ -729,7 +716,7 @@ Webiste: 16726 course website
                         <hr class="col-xs-12 mr-4">
                         <h3>Part 3: Style Transfer</h3>
                         <p class="col-xs-12 mr-4">
-                            After deciding the content loss and style loss structure, it's time to merge them together in the network. In the implementation, to fit the purpose of merging different size of style and content image, I first resize both of the style and content image's smaller dimension to 512 if using cuda, and because we want to maintain content image as same size and ratio as original input, I fix the content's size, and do first do padding for the case when style image's longer dimension is content image's short dimension, this is because if there is empty(black) part in style image, the style feature can be hugely deprecated. And then I do centerCrop on the style image to fit exactly the same size with content image, this is also because we care more about the pattern and texture of the style image instead of its completeness. 
+                            After deciding the content loss and style loss structure, it's time to merge them together in the network. In the implementation, to fit the purpose of merging different size of style and content image, I first resize both of the style and content image's smaller dimension to 512 if using cuda, and because we want to maintain content image as same size and ratio as original input, I fix the content's size, and do first do padding for the case when style image's longer dimension is content image's short dimension, this is because if there is empty(black) part in style image, the style feature can be hugely deprecated. And then I do centerCrop on the style image to fit exactly the same size with content image, this is also because we care more about the pattern and texture of the style image instead of its completeness.
                         </p>
                         <p class="col-xs-12 mr-4">
                             The major hyperParameters are the weights of content and style loss, I fix the content loss weight as 1, and adjust style loss differently, the results are shown below:
@@ -749,7 +736,7 @@ Webiste: 16726 course website
                             </div>
                         </div>
                         <p class="col-xs-12 mr-4">
-                            The weight of style loss ranges a big number, as you can see, for weight < 10^4, the style barely works, but when weight > 10^6, it overwrittens the content. Therefore, a good weight is range(10^4,10^6), however, there is no best weight for a general implementaion. I realized the best weight is different for different style and content input. My general choice is around 10^5. For dancing image and picasso style, I choose style weight of 1.5 * 10^5.
+                            The weight of style loss ranges a big number, as you can see, for weight < 10^4, the style barely works, but when weight> 10^6, it overwrittens the content. Therefore, a good weight is range(10^4,10^6), however, there is no best weight for a general implementaion. I realized the best weight is different for different style and content input. My general choice is around 10^5. For dancing image and picasso style, I choose style weight of 1.5 * 10^5.
                         </p>
                         <p class="col-xs-12 mr-4">
                             To test the robustness of the implementation, I mix 3 content images and 3 style images to get 9 group of style transfer. The content & style input and the noise-based & content-based output are listed below:
@@ -900,7 +887,6 @@ Webiste: 16726 course website
                             In this assignment, we implement a few different techniques that require you to manipulate images on the manifold of natural images. First, we invert a pre-trained generator to find a latent variable that closely reconstructs the given real image. In the second part of the assignment, we take a hand-drawn sketch and generate an image that fits the sketch accordingly.
                         </p>
                         <hr class="col-xs-12 mr-4">
-
                         <h3>Part I: Inverting the Generator</h3>
                         <p class="col-xs-12 mr-4">
                             For the first part of the assignment, we mainly want to solve an optimization problem to reconstruct the image from a particular latent code. And the loss function consists of two parts: pixel-wise generated image and target(source) image's Lp loss; latent space level of content feature MSE loss. To expand it, we want to optimize the difference between image from StyleGAN2's generator and target image to get the better z input, here I test L1 and L2 loss; and at the same time we want to minimize the distance of manifold content feature between target and the z input, which in our case, we feed them to a VGG-19's feature layers, and get compute the loss of conv_3 and conv_4's output.
@@ -908,8 +894,142 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             StyleGAN2 has one remarkable feature to mapping Gaussian distribution of z into w or w+ by the mapping layers so that the noise has a better distribution to fit the model. For comparison of different generator, we experiment with both DCGAN and StyleGAN. Also, for noise sampling, we want to test the influence of distribution of the noise, we test with and without mean normalization, for mean we use N=10000 samples. And for the optimization, I use LBFGS. A group of Ablation experiment is listed below:
                         </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/0_data.png" height="200px">
+                                    <figcaption>Source 0</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_vanilla_z_0.1_mean_l1_750.png" height="200px">
+                                    <figcaption>0_vanilla_z_0.1_mean_l1_750</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/0_vanilla_z_0.1_no_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_vanilla_z_0.1_no_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_vanilla_z_0.5_no_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_vanilla_z_0.5_no_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_vanilla_z_1_no_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_vanilla_z_1_no_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_vanilla_z_0.1_no_mean_l2_1000.png" height="200px">
+                                    <figcaption>0_vanilla_z_0.1_no_mean_l2_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_w_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_w_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_w_0.1_no_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_w_0.1_no_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_w+_0.1_mean_l2_1000.png" height="200px">
+                                    <figcaption>0_stylegan_w+_0.1_mean_l2_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_z_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_z_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_z_0.1_no_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_z_0.1_no_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_z_0.1_no_mean_l2_1000.png" height="200px">
+                                    <figcaption>0_stylegan_z_0.1_no_mean_l2_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/0_stylegan_w+_0.1_no_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_w+_0.1_no_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            Considering the results above, we decided to use mean w+ samping, stylegan2, l1 norm, l1 weight of 10, perc weight of 0.1 as hyper-parameter to generate the cat. Some of the examples are shown below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/1_data.png" height="200px">
+                                    <figcaption>Source 1</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/1_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>1_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/2_data.png" height="200px">
+                                    <figcaption>Source 2</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/2_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>2_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/4_data.png" height="200px">
+                                    <figcaption>Source 4</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/4_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>4_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/6_data.png" height="200px">
+                                    <figcaption>Source 6</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/6_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>6_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part1/7_data.png" height="200px">
+                                    <figcaption>Source 7</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/7_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>7_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/10_data.png" height="200px">
+                                    <figcaption>Source 10</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part1/10_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>10_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
                         <hr class="col-xs-12 mr-4">
-
                         <h3>Part II: Interpolate your Cats</h3>
                         <p class="col-xs-12 mr-4">
                             For Interpolation, given images \(x_1\) and \(x_2\), compute \(z_1 = G^{-1}(x_1), z_2 = G^{-1}(x_2)\). Then we can combine the latent images for some \(\theta \in (0, 1)\) by \(z’ = \theta z_1 + (1 - \theta) z_2\) and generate it via \(x’ = G(z’)\).
@@ -917,17 +1037,88 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             The examples of interpolated gif image are shown below:
                         </p>
+                        <div class="row mr-2">
+                            <div class="text-center  col-12">
+                                <img src="./media/a5/part2/1_stylegan_w+_mean.gif" height="300px">
+                                <img src="./media/a5/part2/3_stylegan_w+_mean.gif" height="300px">
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center  col-12">
+                                <img src="./media/a5/part2/5_stylegan_w+_mean.gif" height="300px">
+                                <img src="./media/a5/part2/7_stylegan_w+_mean.gif" height="300px">
+                            </div>
+                        </div>
                         <hr class="col-xs-12 mr-4">
-
                         <h3>Part III: Scribble to Image</h3>
                         <p class="col-xs-12 mr-4">
-                            
+                            We use color scribble constraints in this problem. Given a user color scribble, we would like GAN to fill in the details, it's pretty much similar to the implementation of Part I, except that we want to apply mask of sketch to both target and generated images, and to both their latent variables(here the mask use pooling to downsize to the same size of latent dimension). The results are shown below:
                         </p>
-                        <p class="col-xs-12 mr-4">
-                            The examples of interpolated gif image are shown below:
-                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part3/0_data.png" height="200px">
+                                    <figcaption>Source 0</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/0_mask.png" height="200px">
+                                    <figcaption>Mask 0</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/0_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>0_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part3/1_data.png" height="200px">
+                                    <figcaption>Source 1</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/1_mask.png" height="200px">
+                                    <figcaption>Mask 1</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/1_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>1_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part3/2_data.png" height="200px">
+                                    <figcaption>Source 2</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/2_mask.png" height="200px">
+                                    <figcaption>Mask 2</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/2_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>2_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/part3/6_data.png" height="200px">
+                                    <figcaption>Source 6</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/6_mask.png" height="200px">
+                                    <figcaption>Mask 6</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/part3/6_stylegan_w+_0.1_mean_l1_1000.png" height="200px">
+                                    <figcaption>6_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
                         <hr class="col-xs-12 mr-4">
-
                         <h3>Bells & Whistles (Extra Points)</h3>
                         <p class="col-xs-12 mr-4">
                             <b>High Resolution Cat Dataset</b>
@@ -935,12 +1126,96 @@ Webiste: 16726 course website
                         <p class="col-xs-12 mr-4">
                             We used the dataset from <a href="https://drive.google.com/file/d/1p9SlAZ_lwtewEM-UU6GvYEdQWTV1K-_g/view">256/128 Resolution Cat Dataset</a>, and generated images like below:
                         </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusCat/0_data.png" height="300px">
+                                    <figcaption>Source 0</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusCat/0_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>0_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusCat/1_data.png" height="300px">
+                                    <figcaption>Source 1</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusCat/1_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>1_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusCat/2_data.png" height="300px">
+                                    <figcaption>Source 2</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusCat/2_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>2_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusCat/3_data.png" height="300px">
+                                    <figcaption>Source 3</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusCat/3_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>3_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
                         <p class="col-xs-12 mr-4">
                             <b>AdaWild Dataset</b>
                         </p>
                         <p class="col-xs-12 mr-4">
                             Also, I tried <a href="https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/images/generated-afhqwild/">AdaWild Dataset</a> and got results as below:
                         </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusWild/1_data.png" height="300px">
+                                    <figcaption>Source 1</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusWild/1_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>1_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusWild/2_data.png" height="300px">
+                                    <figcaption>Source 2</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusWild/2_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>2_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/a5/bonusWild/3_data.png" height="300px">
+                                    <figcaption>Source 3</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/a5/bonusWild/3_stylegan_w+_0.1_mean_l1_1000.png" height="300px">
+                                    <figcaption>3_stylegan_w+_0.1_mean_l1_1000</figcaption>
+                                </figure>
+                            </div>
+                        </div>
                         <hr class="col-xs-12 mr-4">
                     </div>
                 </div>
