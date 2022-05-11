@@ -78,7 +78,10 @@ Webiste: 16726 course website
                     <a class="nav-link" id="a4-tab" data-toggle="tab" href="#a4" role="tab" aria-controls="a4" aria-selected="false">Assignment4</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" id="a5-tab" data-toggle="tab" href="#a5" role="tab" aria-controls="a5" aria-selected="false">Assignment5</a>
+                    <a class="nav-link" id="a5-tab" data-toggle="tab" href="#a5" role="tab" aria-controls="a5" aria-selected="false">Assignment5</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" id="final-tab" data-toggle="tab" href="#final" role="tab" aria-controls="final" aria-selected="false">Final</a>
                 </li>
             </ul>
         </div>
@@ -880,7 +883,7 @@ Webiste: 16726 course website
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade show active" id="a5" role="tabpanel" aria-labelledby="a5-tab">
+            <div class="tab-pane fade" id="a5" role="tabpanel" aria-labelledby="a5-tab">
                 <div class="row">
                     <div class="col-12 my-5 mx-3">
                         <h2>Assignment #5</h2>
@@ -1220,6 +1223,247 @@ Webiste: 16726 course website
                             </div>
                         </div>
                         <hr class="col-xs-12 mr-4">
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade show active" id="final" role="tabpanel" aria-labelledby="final-tab">
+                <div class="row">
+                    <div class="col-12 my-5 mx-3">
+                        <h2>Final Project - Experiment with NeRF Network</h2>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Introduction</h3>
+                        <p class="col-xs-12 mr-4">
+                            We are a team of one person, Joshua Cao. In this project, we explore and experiment with existing NeRF related neural network, we are interested in using NeRF to generate free view sythesized authentic photos, and especially for these large objects that are to approach clean version of views, such as large architecture with occlusions and views that are too high to take a picture unless using drone.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Part I: Have a Taste of NeRF</h3>
+                        <p class="col-xs-12 mr-4">
+                            Since 2020, Neural Radiance Field network has became one of the most popuplar topics in the computer vision, computer graphics and deep learning area. The high fidelity of synthesized image are its most attractive points to us. There are so many NeRF related works and we have tried several of them, which fit the purpose of targetting at large scenario such as historical architectures, and the generalization so that we don't necessarily train the network for each single scene(This is because NeRF has a nature of overfitting the model for each scene). And there are some difficulties while implementing and running the code, the biggest issues are 1). NeRF has a high hardware requirement, 2). some of open source work has some uniques dependencies that we didn't manage to configure it successfully. Here is a list of the NeRF that we tried:
+                        </p>
+                         <div class="row mx-1">
+                            <div class="col-12">
+                                <p class="col-xs-12">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Name</th>
+                                                <th scope="col">Abstract</th>
+                                                <th scope="col">Reference</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>NeRF in the Wild</td>
+                                                <td>Robust to occlusion and illumination variance, developed for large scene. Not a generalized work</td>
+                                                <td>
+                                                    <a class="underline" href="https://nerf-w.github.io/" target="_blank">https://nerf-w.github.io/</a><br>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Pixel NeRF</td>
+                                                <td>Generalization. But the result is not so good</td>
+                                                <td>
+                                                    <a class="underline" href="https://alexyu.net/pixelnerf/" target="_blank">https://alexyu.net/pixelnerf/</a><br>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>IBR-Net</td>
+                                                <td>Generalization, better performance than Pixel-NeRF. But environment is hard to configure(The author doesn't maintain the code anymore)</td>
+                                                <td>
+                                                    <a class="underline" href="https://ibrnet.github.io/" target="_blank">https://ibrnet.github.io/</a><br>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>MVS-NeRF</td>
+                                                <td>Generalization. Very fast. Can't run in the GPU resource I can access(larger than 11GB GPU memory required)</td>
+                                                <td>
+                                                    <a class="underline" href="https://apchenstu.github.io/mvsnerf/" target="_blank">https://apchenstu.github.io/mvsnerf/</a><br>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Instant-NeRF</td>
+                                                <td>State-of-the-art, high requirement of hardware, can't run</td>
+                                                <td>
+                                                    <a class="underline" href="https://github.com/NVlabs/instant-ngp" target="_blank">https://github.com/NVlabs/instant-ngp</a><br>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </p>
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            As shown above, we run these network in a local computer with RTX 2080 Ti 11 GB, the only runnable works are NeRF-W and Pixel-NeRF, but for Pixel-NeRF, the results are barely told anything, for IBR-Net, since the author stops maintaining the code and there are lots of issues encountered while configuring the environment, we gave up on this one.
+                        </p>
+                        <code style="background-color: black;">
+                            RuntimeError: CUDA out of memory. Tried to allocate 54.00 MiB (GPU 0; 11.00 GiB total capacity; 7.89 GiB already allocated; 7.74 MiB free; 478.37 MiB cached)
+                        </code>
+                        <p class="col-xs-12 mr-4">
+                            And for MVS-NeRF and Instant-NeRF, our machine always report running out of GPU memory no matter how small we set the batch and padding of images. Therefore, we decided to focus on NeRF-W.
+                        </p>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Part II: NeRF-W Playtest</h3>
+                        <p class="col-xs-12 mr-4">
+                            To test NeRF-W network, we download the Blender generated <a class="underline" href="https://drive.google.com/drive/folders/128yBriW1IG_3NJ5Rp7APSTZsJqdJdfc1" target="_blank">Nerf_synthetic</a> dataset, and train the network with 20 epoches. And we save checkpoints for each epoch, the training takes very long time(over 1 days for each type of dataset) even though the input image is resized to 200*200. We mainly work on hotdog and lego models. And the test time is around 1 hour for 120 frames per model. And here are some results.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/r_1.png" height="300px">
+                                    <figcaption>Test Input of Lego</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/final/lego.gif" height="300px">
+                                    <figcaption>Generated gif of Lego with color pertubation</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/r_0.png" height="300px">
+                                    <figcaption>Test Input of Hotdog</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/final/hotdog-real.gif" height="300px">
+                                    <figcaption>Generated gif of Hotdog with occlusion pertubation</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            The lego model is trained with color pertubation, and the hotdog model is trained with occlusion pertubation. We can tell that the network works quite well with synthesized models. And we did one more test by inputting the hotdog into pretrained lego network. The results are shown below. As we can see, the NeRF-W network is a highly overfitted neural network, that even though we input the different scenes to calculate loss while testing, the results are still pretrained model lego(without any impact by hotdog input). Therefore, the real meaningful input is actually only 5D vector(3D camera pose and 2D camera ray). 
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/r_0.png" height="300px">
+                                    <figcaption>Test Input of Hotdog</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/final/hotdog-overfitting.gif" height="300px">
+                                    <figcaption>Generated gif of pretrained Lego model</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <hr class="col-xs-12 mr-4">
+                        <h3>Part III: Dataset Preparation</h3>
+                        <p class="col-xs-12 mr-4">
+                            From the tests above, we can tell NeRF-W is ideal for our goal except for the time required to train and test. We move on preparing dataset of real life CMU campus by <a class="underline" href="ColMap https://colmap.github.io/" target="_blank">ColMap</a>. We took a sequence of raw images with 1920*1080 of MMCH and Hamerschlag Hall by DRSL Canon 5D4, we adapt the white balance, exposure, lens to get diverse instrinic data and different illumination. Some example of raw images are below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/mmch-raw.jpg" height="400px">
+                                    <figcaption>MMCH raw RGB</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/final/hh-raw.jpg" height="400px">
+                                    <figcaption>HH raw RGB</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            And we put these raw captures into ColMap to get camera pose and point cloud, although camera pose is not strictly ground truth, but currently SfM algorithm has centimeter-level erros with the feature abundant inputs like ours, we can roughly take them as ground truth. Some results are shown below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/mmch.jpg" height="300px">
+                                    <figcaption>MMCH camera pose and point cloud</figcaption>
+                                </figure>
+                                <figure>
+                                    <img src="./media/final/hh.jpg" height="300px">
+                                    <figcaption>HH camera pose and point cloud</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            To fit the format of NeRF-W training requirement, we also generate a file to split different training, test tasks, also align the image with camera instrinsic parameters. The ID below in the image refers to Camera ID in the cameras.bin.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/split.jpg" height="200px">
+                                    <figcaption>tsv file to split dataset for NeRF-W</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <h3>Part IV: Architecture Test</h3>
+                        <p class="col-xs-12 mr-4">
+                            To train the dataset, we tried different ways to make it work in 2080Ti environment, such as using a prepare_phototourism.py file to pre-process and cache the large dataset on the disk by command line: 
+                        </p>
+                        <code style="background-color: black;">
+                            Python prepare_phototourism.py --root_dir ./data/MMCH --img_downscale 8
+                        </code>
+                        <p class="col-xs-12 mr-4">
+                            For real tourism test, We first experiment NeRF-W with some pretrained model with Nerf_llff dataset. We customized the input of 5D trajectorys and generate a series of free viewport gif. The results are shown below:
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/brandenburg_march.gif" height="400px">
+                                    <figcaption>Brandenburg synthesized views of marching forward</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/brandenburg_backforth.gif" height="400px">
+                                    <figcaption>Brandenburg synthesized views of back and forth</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/brandenburg_leftright.gif" height="400px">
+                                    <figcaption>Brandenburg synthesized views of left to right</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <p class="col-xs-12 mr-4">
+                            Then we train a small set of dataset with 120 images of 1920*1080, which is finished in almos 5 hours. And then we test it to get results as below. As you can see, the synthesized images are still little blurry, due to the small amount of dataset, but the overall results are recognizable.
+                        </p>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/mmch-input.jpg" height="400px">
+                                    <figcaption>MMCH CMU input</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/mmch_leftright.gif" height="400px">
+                                    <figcaption>MMCH synthesized views of left to right</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/mmch_march.gif" height="400px">
+                                    <figcaption>MMCH synthesized views of marching</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <div class="row mr-2">
+                            <div class="text-center images col-12">
+                                <figure>
+                                    <img src="./media/final/mmch_backforth.gif" height="400px">
+                                    <figcaption>MMCH synthesized views of back and forth</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                        <h3>Conclusion</h3>
+                        <p class="col-xs-12 mr-4">
+                            After a series of learning and testing of NeRF related works, I learned that most of early work(2020-2021) are overfitting oriented and it requires training for each specific scene, both the generation of dataset and training are a time-consuming task, but it guarantees a very authentic result. Some most recent NeRF works have expand the method to a more generalized domain where the fidelity might drop a little bit, and the biggest issue is that they require more GPU resources.
+                        </p>
+                        <p class="col-xs-12 mr-4">
+                            NeRF-W is a promising and interesting network, I'm looking for a better platform to get the training of my customized dataset done more quickly, collecting more dataset, and generate some fun results with video style transfer for the next step after this course.
+                        </p>
                     </div>
                 </div>
             </div>
